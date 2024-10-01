@@ -1,0 +1,6 @@
+.env
+.venv
+.vscode
+*.DS_Store
+*.ipynb
+venv/
