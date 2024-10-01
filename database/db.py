@@ -1,0 +1,193 @@
+# database/db.py
+import sqlite3
+import os
+
+
+def connect_activities_db(db_name="activities.db"):
+    db_path = os.path.join(os.path.dirname(__file__), db_name)
+    conn = sqlite3.connect(db_path)
+    return conn
+
+
+def connect_gear_db(db_name="gear.db"):
+    db_path = os.path.join(os.path.dirname(__file__), db_name)
+    conn = sqlite3.connect(db_path)
+    return conn
+
+
+def create_activities_table():
+    conn = connect_activities_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS activities (
+                   id INTEGER PRIMARY KEY,
+                   date TEXT,
+                   month TEXT,
+                   day_of_week TEXT,
+                   start_time TEXT,
+                   end_time TEXT,
+                   sport_type TEXT,
+                   indoor INTEGER,
+                   distance REAL,
+                   duration REAL,
+                   elevation_gain REAL,
+                   gear_id TEXT,
+                   average_heartrate REAL,
+                   average_speed REAL,
+                   average_cadence REAL,
+                   average_temp REAL,
+                   average_watts REAL,
+                   intensity INTEGER
+                   )
+                   
+    """
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_gear_table():
+    conn = connect_gear_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS gear (
+            gear_id TEXT PRIMARY KEY,
+            name TEXT,
+            distance REAL,
+            brand_name TEXT,
+            model_name TEXT,
+            retired INTEGER,
+            weight REAL
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def insert_activity(activity):
+    conn = connect_activities_db()
+    cursor = conn.cursor()
+
+    # Check if activity already exists
+    cursor.execute("SELECT * FROM activities WHERE id = ?", (activity.activity_id,))
+    existing_activity = cursor.fetchone()
+
+    if existing_activity:
+        cursor.execute(
+            """
+            UPDATE activities
+            SET date = ?, month = ?, day_of_week = ?, start_time = ?, end_time = ?, 
+                sport_type = ?, indoor = ?, distance = ?, duration = ?, 
+                elevation_gain = ?, gear_id = ?, average_heartrate = ?, 
+                average_speed = ?, average_cadence = ?, average_temp = ?, 
+                average_watts = ?, intensity = ?
+            WHERE id = ?
+            """,
+            (
+                activity.date,
+                activity.month,
+                activity.day_of_week,
+                activity.start_time,
+                activity.end_time,
+                activity.sport_type,
+                int(activity.indoor),  
+                activity.distance,
+                activity.duration,
+                activity.elevation_gain,
+                activity.gear_id,
+                activity.average_heartrate,
+                activity.average_speed,
+                activity.average_cadence,
+                activity.average_temp,
+                activity.average_watts,
+                activity.intensity,
+                activity.activity_id,  # ID for the WHERE clause
+            ),
+        )
+        print(f"Updated activity: {activity.activity_id}")
+    else:
+        cursor.execute(
+            """
+            INSERT INTO activities (id, date, month, day_of_week, start_time, end_time, 
+                sport_type, indoor, distance, duration, elevation_gain, 
+                gear_id, average_heartrate, average_speed, average_cadence, 
+                average_temp, average_watts, intensity)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                activity.activity_id,
+                activity.date,
+                activity.month,
+                activity.day_of_week,
+                activity.start_time,
+                activity.end_time,
+                activity.sport_type,
+                int(activity.indoor),
+                activity.distance,
+                activity.duration,
+                activity.elevation_gain,
+                activity.gear_id,
+                activity.average_heartrate,
+                activity.average_speed,
+                activity.average_cadence,
+                activity.average_temp,
+                activity.average_watts,
+                activity.intensity,
+            ),
+        )
+        print(f"Inserted activity: {activity.activity_id}")
+
+    conn.commit()
+    conn.close()
+
+
+def insert_gear(gear):
+    from models.gear import Gear
+
+    conn = connect_gear_db()
+    cursor = conn.cursor()
+    # Check if gear already exists
+    cursor.execute("SELECT * FROM gear WHERE gear_id = ?", (gear.gear_id,))
+    existing_gear = cursor.fetchone()
+
+    if existing_gear:
+        cursor.execute(
+            """
+            UPDATE gear
+            SET name = ?, distance = ?, brand_name = ?, model_name = ?, retired = ?, weight = ?
+            WHERE gear_id = ?
+            """,
+            (
+                gear.name,
+                gear.distance,
+                gear.brand_name,
+                gear.model_name,
+                int(gear.retired),
+                gear.weight,
+                gear.gear_id,
+            ),
+        )
+        print(f"Updated gear: {gear.name}")
+    else:
+        cursor.execute(
+            """
+            INSERT INTO gear (gear_id, name, distance, brand_name, model_name, retired, weight)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                gear.gear_id,
+                gear.name,
+                gear.distance,
+                gear.brand_name,
+                gear.model_name,
+                int(gear.retired),
+                gear.weight,
+            ),
+        )
+        print(f"Inserted gear: {gear.name}")
+
+    conn.commit()
+    conn.close()
