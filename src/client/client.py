@@ -80,6 +80,10 @@ class StravaClient:
     def get_detailed_activity(self, activity_id):
         """Fetch details of a specific activity by ID."""
         return self.make_request(f"activities/{activity_id}")
+    
+    def get_activity_zones(self, activity_id):
+        """Fetch heart rate and power zones for a specific activity."""
+        return self.make_request(f"activities/{activity_id}/zones")
 
     def get_activity_laps(self, activity_id):
         """Fetch lap details of a specific activity by ID."""
@@ -114,7 +118,7 @@ if __name__ == "__main__":
 
     # Get detailed activity
     activity = client.get_detailed_activity(activity_id="12455871622")
-    print(activity)
+    print(type(activity))
 
     # Get athlete stats
     #stats = client.get_athlete_stats()
@@ -122,12 +126,3 @@ if __name__ == "__main__":
 
     # laps = client.get_activity_laps(activity_id="12455871622")
     # print(json.dumps(laps, indent=4))
-
-    
-    # streams_data = client.stream_client._get_streams(activity_id, stream_types)
-
-    # # Extract and print stream data
-    # time_stream = StreamClient.extract_stream_data(streams_data, "time")
-    # distance_stream = StreamClient.extract_stream_data(streams_data, "distance")
-    # print("Time Stream:", time_stream)
-    #print("Distance Stream:", distance_stream))
