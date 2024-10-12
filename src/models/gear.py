@@ -1,4 +1,4 @@
-# models/gear.py
+# src/models/gear.py
 
 
 class Gear:

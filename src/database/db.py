@@ -1,16 +1,19 @@
-# database/db.py
-import sqlite3
+# src/database/db.py
 import os
+import sqlite3
+from loguru import logger
 
 
 def connect_activities_db(db_name="activities.db"):
-    db_path = os.path.join(os.path.dirname(__file__), db_name)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    db_path = os.path.join(project_root, "data", db_name)
     conn = sqlite3.connect(db_path)
     return conn
 
 
 def connect_gear_db(db_name="gear.db"):
-    db_path = os.path.join(os.path.dirname(__file__), db_name)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    db_path = os.path.join(project_root, "data", db_name)
     conn = sqlite3.connect(db_path)
     return conn
 
@@ -72,43 +75,11 @@ def insert_activity(activity):
     cursor = conn.cursor()
 
     # Check if activity already exists
-    cursor.execute("SELECT * FROM activities WHERE id = ?", (activity.activity_id,))
+    cursor.execute("SELECT 1 FROM activities WHERE id = ?", (activity.activity_id,))
     existing_activity = cursor.fetchone()
 
-    if existing_activity:
-        cursor.execute(
-            """
-            UPDATE activities
-            SET date = ?, month = ?, day_of_week = ?, start_time = ?, end_time = ?, 
-                sport_type = ?, indoor = ?, distance = ?, duration = ?, 
-                elevation_gain = ?, gear_id = ?, average_heartrate = ?, 
-                average_speed = ?, average_cadence = ?, average_temp = ?, 
-                average_watts = ?, intensity = ?
-            WHERE id = ?
-            """,
-            (
-                activity.date,
-                activity.month,
-                activity.day_of_week,
-                activity.start_time,
-                activity.end_time,
-                activity.sport_type,
-                int(activity.indoor),  
-                activity.distance,
-                activity.duration,
-                activity.elevation_gain,
-                activity.gear_id,
-                activity.average_heartrate,
-                activity.average_speed,
-                activity.average_cadence,
-                activity.average_temp,
-                activity.average_watts,
-                activity.intensity,
-                activity.activity_id,  # ID for the WHERE clause
-            ),
-        )
-        print(f"Updated activity: {activity.activity_id}")
-    else:
+    if not existing_activity:
+        # If the activity doesn't exist, insert it
         cursor.execute(
             """
             INSERT INTO activities (id, date, month, day_of_week, start_time, end_time, 
@@ -138,7 +109,7 @@ def insert_activity(activity):
                 activity.intensity,
             ),
         )
-        print(f"Inserted activity: {activity.activity_id}")
+        logger.info(f"Inserted new activity {activity.activity_id} into the database.")
 
     conn.commit()
     conn.close()
@@ -170,7 +141,7 @@ def insert_gear(gear):
                 gear.gear_id,
             ),
         )
-        print(f"Updated gear: {gear.name}")
+        logger.info(f"Updated gear: {gear.name}")
     else:
         cursor.execute(
             """
@@ -187,7 +158,7 @@ def insert_gear(gear):
                 gear.weight,
             ),
         )
-        print(f"Inserted gear: {gear.name}")
+        logger.info(f"Inserted gear: {gear.name}")
 
     conn.commit()
     conn.close()

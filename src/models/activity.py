@@ -1,4 +1,4 @@
-# models/activity.py
+# src/models/activity.py
 class Activity:
     def __init__(
         self,

@@ -1,6 +1,6 @@
-# models/processing.py
+# src/models/processing.py
 import pandas as pd
-from datetime import datetime, timedelta
+from loguru import logger
 
 def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -132,7 +132,7 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
               .pipe(replace_nan_values)
         )
     except Exception as e:
-        print(f"Error processing data: {e}")
+        logger.error(f"Error processing data: {e}")
         raise
 
     columns = [

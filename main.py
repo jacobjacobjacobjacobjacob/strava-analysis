@@ -3,14 +3,14 @@ import pandas as pd
 from dotenv import load_dotenv
 import os
 
-from api.client import StravaClient
-from models.processing import process_data
+from src.api.client import StravaClient
+from src.models.processing import process_data
 
-from models.activity import Activity
-from database.db import create_activities_table
+from src.models.activity import Activity
+from src.database.db import create_activities_table
 
-from models.gear import Gear
-from database.db import create_gear_table
+from src.models.gear import Gear
+from src.database.db import create_gear_table
 
 def main():
     load_dotenv()
