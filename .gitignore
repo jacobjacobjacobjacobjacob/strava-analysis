@@ -5,3 +5,4 @@
 *.ipynb
 venv/
 *.db
+__pycache__/
