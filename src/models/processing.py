@@ -1,6 +1,7 @@
 # src/models/processing.py
 import pandas as pd
 from loguru import logger
+from utils import map_months
 
 def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -72,6 +73,7 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
               .pipe(convert_units)
               .pipe(split_datetime_columns)
               .pipe(replace_nan_values)
+              .pipe(map_months)
         )
     except Exception as e:
         logger.error(f"Error processing data: {e}")
