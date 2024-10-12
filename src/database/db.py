@@ -110,9 +110,7 @@ def insert_activity(activity):
             ),
         )
         logger.info(f"Inserted new activity {activity.activity_id} into the database.")
-    else:
-        logger.info(f"Activity {activity.activity_id} already exists in the database.")
-
+    
     conn.commit()
     conn.close()
 
