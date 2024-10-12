@@ -1,4 +1,4 @@
-# src/api/client.py
+# src/client/client.py
 import os
 import sys
 import requests
@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from loguru import logger
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from assets.constants import VALID_STREAM_TYPES
+from src.assets.constants import VALID_STREAM_TYPES
+from src.client.streams import StreamClient
 
 class StravaClient:
     def __init__(
@@ -22,6 +23,7 @@ class StravaClient:
         self.refresh_token = refresh_token
         self.access_token = access_token
         self.athlete_id = athlete_id
+        self.stream_client = StreamClient(self)
         logger.info(f"Initializing StravaClient for athlete {athlete_id}")
 
         if self.access_token is None:
@@ -91,57 +93,6 @@ class StravaClient:
         return self.make_request(f"gear/{gear_id}")
 
 
-    # Streams
-    def get_streams(self, activity_id, stream_types):
-        """Private method to fetch multiple streams for a given activity."""
-        # Validate stream types
-        for stream_type in stream_types:
-            if stream_type not in VALID_STREAM_TYPES:
-                raise ValueError(f"Invalid stream type requested: {stream_type}")
-
-        # Make API request using the validated stream types (comma-separated)
-        stream_types_str = ",".join(stream_types)
-        return self.make_request(f"activities/{activity_id}/streams?keys={stream_types_str}&key_by_type=true")
-    
-    def _get_streams(self, activity_id, stream_types):
-        """Private method to fetch multiple streams for a given activity."""
-        # Validate stream types
-        for stream_type in stream_types:
-            if stream_type not in VALID_STREAM_TYPES:
-                raise ValueError(f"Invalid stream type requested: {stream_type}")
-
-        # Make API request using the validated stream types (comma-separated)
-        stream_types_str = ",".join(stream_types)
-        return self.make_request(f"activities/{activity_id}/streams?keys={stream_types_str}&key_by_type=true")
-
-  
-
-    def get_time_stream(self, activity_id):
-        # Fetch only the time stream
-        return self._get_streams(activity_id, ["time"])
-
-    def get_distance_stream(self, activity_id):
-        # Fetch only the distance stream
-        return self._get_streams(activity_id, ["distance"])
-
-    def get_latlng_stream(self, activity_id):
-        # Fetch only the latlng stream
-        return self._get_streams(activity_id, ["latlng"])
-
-    def get_altitude_stream(self, activity_id):
-        # Fetch only the altitude stream
-        return self._get_streams(activity_id, ["altitude"])
-
-    def get_cadence_stream(self, activity_id):
-        # Fetch only the cadence stream
-        return self._get_streams(activity_id, ["cadence"])
-
-    def get_speed_stream(self, activity_id):
-        return self._get_stream(activity_id, "velocity_smooth")
-
-    def get_heartrate_stream(self, activity_id):
-        return self._get_stream(activity_id, "heartrate")
-
 
 if __name__ == "__main__":
     load_dotenv()
@@ -153,14 +104,17 @@ if __name__ == "__main__":
         refresh_token=os.getenv("STRAVA_REFRESH_TOKEN"),
         athlete_id=os.getenv("STRAVA_ATHLETE_ID"),
     )
+    stream_types = ["time", "distance"]
+    activity_id = "12433392206"
+
 
     # Fetch latest activities
     # activities = client.get_activities(per_page=5)
     # print(activities)
 
     # Get detailed activity
-    #activity = client.get_detailed_activity(activity_id="12455871622")
-    #print(activity)
+    activity = client.get_detailed_activity(activity_id="12455871622")
+    print(activity)
 
     # Get athlete stats
     #stats = client.get_athlete_stats()
@@ -169,33 +123,11 @@ if __name__ == "__main__":
     # laps = client.get_activity_laps(activity_id="12455871622")
     # print(json.dumps(laps, indent=4))
 
-    # speed_stream = client.get_cadence_stream(activity_id="12433392206")
-    # print(json.dumps(speed_stream, indent=4))
     
-    def extract_stream_data(streams, stream_type):
-        if not isinstance(streams, dict):
-            raise ValueError("Expected streams to be a dictionary.")
+    # streams_data = client.stream_client._get_streams(activity_id, stream_types)
 
-        stream = streams.get(stream_type)
-        if stream and isinstance(stream, dict):
-            return stream.get('data', [])
-        return []  # Return empty list if stream_type not found
-    activity_id = "12422361892"
-    stream_types = ["time", "distance"]
-
-    streams_data = client.get_streams(activity_id, stream_types)
-
-    # Print the whole streams_data to check its content
-    #print(json.dumps(streams_data, indent=2))
-
-    # Now try to extract time and distance streams
-    time_stream = extract_stream_data(streams_data, "time")
-    distance_stream = extract_stream_data(streams_data, "distance")
-
-    #print("Time Stream:", time_stream)
-    print("Distance Stream:", distance_stream)
-
-
-
-
-    #print(time_stream)
+    # # Extract and print stream data
+    # time_stream = StreamClient.extract_stream_data(streams_data, "time")
+    # distance_stream = StreamClient.extract_stream_data(streams_data, "distance")
+    # print("Time Stream:", time_stream)
+    #print("Distance Stream:", distance_stream))

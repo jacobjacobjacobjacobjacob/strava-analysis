@@ -74,12 +74,12 @@ def insert_activity(activity):
     conn = connect_activities_db()
     cursor = conn.cursor()
 
-    # Check if activity already exists
+    # Check if the activity already exists
     cursor.execute("SELECT 1 FROM activities WHERE id = ?", (activity.activity_id,))
     existing_activity = cursor.fetchone()
 
     if not existing_activity:
-        # If the activity doesn't exist, insert it
+        # Insert the activity
         cursor.execute(
             """
             INSERT INTO activities (id, date, month, day_of_week, start_time, end_time, 
@@ -110,6 +110,8 @@ def insert_activity(activity):
             ),
         )
         logger.info(f"Inserted new activity {activity.activity_id} into the database.")
+    else:
+        logger.info(f"Activity {activity.activity_id} already exists in the database.")
 
     conn.commit()
     conn.close()
