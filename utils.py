@@ -3,6 +3,7 @@ import time
 import pandas as pd
 from loguru import logger
 
+
 def timer(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -11,14 +12,17 @@ def timer(func):
         execution_time = end_time - start_time
         logger.info(f"{func.__name__} executed in {execution_time:.1f} seconds")
         return result
+
     return wrapper
+
 
 def map_months(df: pd.DataFrame):
     df["month"] = df["month"].map(MONTH_MAPPING)
     return df
 
+
 def map_weather_codes(df: pd.DataFrame):
-    df["weather_description"] = df["weather_code"].map(WEATHER_CODE_MAPPING)
+    df["weather_code"] = df["weather_code"].map(WEATHER_CODE_MAPPING)
     return df
 
 
