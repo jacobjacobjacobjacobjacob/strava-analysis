@@ -4,22 +4,23 @@ import sqlite3
 from loguru import logger
 
 
-
 def connect_db(db_name):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
     db_path = os.path.join(project_root, "data", db_name)
     conn = sqlite3.connect(db_path)
     return conn
 
+
 def connect_activities_db():
     return connect_db("activities.db")
+
 
 def connect_gear_db():
     return connect_db("gear.db")
 
+
 def connect_weather_db():
     return connect_db("weather.db")
-
 
 
 def create_activities_table():
@@ -190,6 +191,7 @@ def insert_gear(gear):
     conn.commit()
     conn.close()
 
+
 def insert_weather(weather):
     conn = connect_weather_db()
     cursor = conn.cursor()
@@ -216,7 +218,9 @@ def insert_weather(weather):
                 weather.snow,
             ),
         )
-        logger.info(f"Inserted new weather data for activity {weather.activity_id} into the database.")
+        logger.info(
+            f"Inserted new weather data for activity {weather.activity_id} into the database."
+        )
 
     conn.commit()
     conn.close()
