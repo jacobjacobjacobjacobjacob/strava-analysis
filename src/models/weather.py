@@ -35,7 +35,7 @@ class Weather:
         insert_weather(self)
 
     @classmethod
-    def process_weather_data(cls, weather_df):
+    def process_weather(cls, weather_df):
         """Process and save weather data from a DataFrame to the database."""
         for _, row in weather_df.iterrows():
             # Create a Weather instance from the row
