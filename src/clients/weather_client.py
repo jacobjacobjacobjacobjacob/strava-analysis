@@ -100,7 +100,7 @@ class WeatherClient:
         successful_fetches = 0
         total_rows = len(self.df)
 
-        # Add rounded start time and fetch weather data in one pass
+        # Add rounded start time and fetch weather data for each row
         self.df["rounded_start_time"] = self.df["start_time"].apply(
             self.round_time_to_nearest_hour
         )
