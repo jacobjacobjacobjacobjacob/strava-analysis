@@ -137,10 +137,13 @@ def process_weather_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Input must be a pandas DataFrame.")
-    # df = map_weather_codes(df)
-    # df = rename_weather_columns(df)
+
     try:
-        processed_df = df.pipe(map_weather_codes).pipe(rename_weather_columns)
+        # Check if the weather_code column exists
+        if "weather_code" in df.columns:
+            df = df.pipe(map_weather_codes)
+
+        processed_df = df.pipe(rename_weather_columns)
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         raise
