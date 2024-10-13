@@ -24,7 +24,7 @@ class StravaClient:
 
         if self.access_token is None:
             self.refresh_access_token()
-    @timer
+
     def refresh_access_token(self):
         """Refresh the access token using the refresh token."""
         url = "https://www.strava.com/oauth/token"
@@ -40,7 +40,7 @@ class StravaClient:
             self.access_token = data["access_token"]
             self.refresh_token = data["refresh_token"]
             self.expires_at = data["expires_at"]
-            logger.info("Access token refreshed successfully.")
+            logger.debug("Access token refreshed successfully.")
 
         else:
             logger.error(f"Failed to refresh token: {e}")
