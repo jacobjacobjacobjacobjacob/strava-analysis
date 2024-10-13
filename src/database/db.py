@@ -4,18 +4,22 @@ import sqlite3
 from loguru import logger
 
 
-def connect_activities_db(db_name="activities.db"):
+
+def connect_db(db_name):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
     db_path = os.path.join(project_root, "data", db_name)
     conn = sqlite3.connect(db_path)
     return conn
 
+def connect_activities_db():
+    return connect_db("activities.db")
 
-def connect_gear_db(db_name="gear.db"):
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-    db_path = os.path.join(project_root, "data", db_name)
-    conn = sqlite3.connect(db_path)
-    return conn
+def connect_gear_db():
+    return connect_db("gear.db")
+
+def connect_weather_db():
+    return connect_db("weather.db")
+
 
 
 def create_activities_table():
@@ -66,6 +70,27 @@ def create_gear_table():
             weight REAL
         )
         """
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_weather_table():
+    conn = connect_weather_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS weather (
+                   id INTEGER PRIMARY KEY,
+                   date TEXT,
+                   temp REAL,
+                   weather_type TEXT,
+                   precipitation REAL,
+                   rain REAL,
+                   wind REAL,
+                   snow REAL
+                   )            
+    """
     )
     conn.commit()
     conn.close()
@@ -161,6 +186,37 @@ def insert_gear(gear):
             ),
         )
         logger.info(f"Inserted gear: {gear.name}")
+
+    conn.commit()
+    conn.close()
+
+def insert_weather(weather):
+    conn = connect_weather_db()
+    cursor = conn.cursor()
+
+    # Check if the weather entry already exists
+    cursor.execute("SELECT 1 FROM weather WHERE id = ?", (weather.activity_id,))
+    existing_weather = cursor.fetchone()
+
+    if not existing_weather:
+        # Insert the weather data
+        cursor.execute(
+            """
+            INSERT INTO weather (id, date, temp, weather_type, precipitation, rain, wind, snow)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                weather.activity_id,
+                weather.date,
+                weather.temp,
+                weather.weather_type,
+                weather.precipitation,
+                weather.rain,
+                weather.wind,
+                weather.snow,
+            ),
+        )
+        logger.info(f"Inserted new weather data for activity {weather.activity_id} into the database.")
 
     conn.commit()
     conn.close()
