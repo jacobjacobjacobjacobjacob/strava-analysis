@@ -1,20 +1,33 @@
 # src/models/processing.py
 import pandas as pd
 from loguru import logger
-from utils import map_months
+from utils import map_months, map_weather_codes
 
-def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Renames columns for clarity.
-    """
-    return df.rename(columns={
-        "moving_time": "duration",
-        "total_elevation_gain": "elevation_gain",
-        "start_date_local": "date",
-        "trainer": "indoor",
-        "suffer_score": "intensity",
-        "start_latlng": "lat_lng"
-    })
+
+def rename_activity_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Renames columns for clarity."""
+    return df.rename(
+        columns={
+            "moving_time": "duration",
+            "total_elevation_gain": "elevation_gain",
+            "start_date_local": "date",
+            "trainer": "indoor",
+            "suffer_score": "intensity",
+            "start_latlng": "lat_lng",
+        }
+    )
+
+
+def rename_weather_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Renames columns for clarity."""
+    return df.rename(
+        columns={
+            "temperature": "temp",
+            "weather_code": "weather_type",
+            "wind_speed_10m": "wind",
+            "snowfall": "snow",
+        }
+    )
 
 
 def convert_units(df: pd.DataFrame) -> pd.DataFrame:
@@ -24,9 +37,9 @@ def convert_units(df: pd.DataFrame) -> pd.DataFrame:
     unit_conversions = {
         "distance": lambda m: m / 1000,  # meters to kilometers
         "duration": lambda sec: sec / 60,  # seconds to minutes
-        "average_speed": lambda mps: mps * 3.6  # m/s to km/h
+        "average_speed": lambda mps: mps * 3.6,  # m/s to km/h
     }
-    
+
     for col, conversion in unit_conversions.items():
         if col in df:
             df[col] = df[col].apply(conversion)
@@ -45,10 +58,10 @@ def split_datetime_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["month"] = df["start_time"].dt.strftime("%m")
     df["day_of_week"] = df["start_time"].dt.strftime("%A").str.title()
     df["end_time"] = df["start_time"] + pd.to_timedelta(df["duration"], unit="m")
-    
+
     df["start_time"] = df["start_time"].dt.strftime("%H:%M")
     df["end_time"] = df["end_time"].dt.strftime("%H:%M")
-    
+
     return df
 
 
@@ -58,7 +71,9 @@ def replace_lat_lng_values(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Ensure lat_lng is always a string
     df["lat_lng"] = df["lat_lng"].apply(
-        lambda x: ', '.join(map(str, x)) if isinstance(x, list) and len(x) > 0 else "0, 0"
+        lambda x: (
+            ", ".join(map(str, x)) if isinstance(x, list) and len(x) > 0 else "0, 0"
+        )
     )
     return df
 
@@ -69,10 +84,8 @@ def replace_nan_with_mean(df: pd.DataFrame) -> pd.DataFrame:
     """
     return df.fillna(df.mean(numeric_only=True))
 
-def add_weather_data(df: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataFrame:
-    pass
 
-def process_data(df: pd.DataFrame) -> pd.DataFrame:
+def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Processes raw activity data.
     """
@@ -82,20 +95,56 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
 
     try:
         processed_df = (
-            df.pipe(rename_columns)
-              .pipe(convert_units)
-              .pipe(split_datetime_columns)
-              .pipe(replace_nan_with_mean)
-              .pipe(replace_lat_lng_values)
-              .pipe(map_months)
+            df.pipe(rename_activity_columns)
+            .pipe(convert_units)
+            .pipe(split_datetime_columns)
+            .pipe(replace_nan_with_mean)
+            .pipe(replace_lat_lng_values)
+            .pipe(map_months)
         )
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         raise
 
-    return processed_df[[
-        "id", "date", "month", "day_of_week", "start_time", "end_time", 
-        "sport_type", "indoor", "distance", "duration", "elevation_gain", 
-        "gear_id", "average_heartrate", "average_speed", "average_cadence", 
-        "average_temp", "average_watts", "intensity", "lat_lng"
-    ]]
+    return processed_df[
+        [
+            "id",
+            "date",
+            "month",
+            "day_of_week",
+            "start_time",
+            "end_time",
+            "sport_type",
+            "indoor",
+            "distance",
+            "duration",
+            "elevation_gain",
+            "gear_id",
+            "average_heartrate",
+            "average_speed",
+            "average_cadence",
+            "average_temp",
+            "average_watts",
+            "intensity",
+            "lat_lng",
+        ]
+    ]
+
+
+def process_weather_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Processes weather data.
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
+    # df = map_weather_codes(df)
+    # df = rename_weather_columns(df)
+    try:
+        processed_df = df.pipe(map_weather_codes).pipe(rename_weather_columns)
+    except Exception as e:
+        logger.error(f"Error processing data: {e}")
+        raise
+
+    return processed_df[
+        ["id", "date", "temp", "weather_type", "precipitation", "rain", "wind", "snow"]
+    ]
