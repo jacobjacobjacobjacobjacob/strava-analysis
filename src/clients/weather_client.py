@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from loguru import logger
-from utils import map_weather_codes
+from src.database.db import connect_weather_db, connect_activities_db
 
 
 class WeatherClient:
@@ -13,42 +13,58 @@ class WeatherClient:
         self.df = df
         logger.info("Initializing WeatherClient")
 
-    def extract_row_weather(self, row):
-        weather_data = row.get("weather_data")
-        if not weather_data or "hourly" not in weather_data:
-            return None
+    def get_existing_weather_ids(self):
+        """Fetch activity IDs from the weather table that already have weather data."""
+        conn = connect_weather_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM weather")
+        existing_ids = cursor.fetchall()
+        conn.close()
 
-        rounded_time_str = f"{row['date']}T{row['rounded_start_time']}:00"
-        try:
-            rounded_time = datetime.strptime(rounded_time_str, "%Y-%m-%dT%H:%M:%S")
-        except ValueError as e:
-            logger.error(f"Error parsing time: {e}")
-            return None
+        # Convert the list of tuples to a flat list of activity IDs
+        return {row[0] for row in existing_ids}
 
-        hourly_times = [
-            datetime.strptime(time, "%Y-%m-%dT%H:%M")
-            for time in weather_data["hourly"]["time"]
-        ]
-        if rounded_time in hourly_times:
-            index = hourly_times.index(rounded_time)
-            return {
-                "temperature": weather_data["hourly"]["temperature_2m"][index],
-                "precipitation": weather_data["hourly"]["precipitation"][index],
-                "weather_code": weather_data["hourly"]["weather_code"][index],
-                "wind_speed_10m": weather_data["hourly"]["wind_speed_10m"][index],
-                "rain": weather_data["hourly"]["rain"][index],
-                "snowfall": weather_data["hourly"]["snowfall"][index],
-            }
-        else:
-            logger.warning(
-                f"Rounded time {rounded_time} not found in weather data for row {row.name}"
-            )
-            return None
+    def get_existing_activity_ids(self):
+        """Fetch activity IDs from the activities table."""
+        conn = connect_activities_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM activities")
+        activity_ids = cursor.fetchall()
+        conn.close()
 
-    def extract_weather_info(self):
-        # Extract weather info and expand into DataFrame columns
-        weather_info = self.df.apply(self.extract_row_weather, axis=1).apply(pd.Series)
-        return pd.concat([self.df, weather_info], axis=1)
+        # Convert the list of tuples to a flat list of activity IDs
+        return {row[0] for row in activity_ids}
+
+    def get_weather_data(self):
+        # Get all activities and weather entries
+        existing_activity_ids = self.get_existing_activity_ids()
+        existing_weather_ids = self.get_existing_weather_ids()
+
+        # Filter out activities that already have weather data
+        missing_weather_ids = list(
+            set(existing_activity_ids) - set(existing_weather_ids)
+        )
+
+        if not missing_weather_ids:
+            logger.info("All activities already have weather data.")
+            return pd.DataFrame()  # No new data to fetch
+
+        # Filter self.df to include only rows with missing weather data
+        df_missing_weather = self.df[self.df["id"].isin(missing_weather_ids)]
+
+        # Fetch weather data for those activities
+        df_missing_weather["weather_data"] = df_missing_weather.apply(
+            self.fetch_weather_data, axis=1, base_url=self.BASE_URL
+        )
+        logger.info(f"Fetched weather data for {len(df_missing_weather)} activities.")
+
+        # Return the dataframe with fetched weather data
+        return self.extract_weather_info(df_missing_weather)
+
+    def extract_weather_info(self, df):
+        """Extracts and expands weather information from the fetched data."""
+        weather_info = df.apply(self.extract_row_weather, axis=1).apply(pd.Series)
+        return pd.concat([df, weather_info], axis=1)
 
     def round_time_to_nearest_hour(self, time_str):
         # Convert the time string into a datetime object
@@ -97,19 +113,27 @@ class WeatherClient:
             return None
 
     def get_weather_data(self):
-        successful_fetches = 0
-        total_rows = len(self.df)
+        # Get all activities and weather entries
+        existing_activity_ids = self.get_existing_activity_ids()
+        existing_weather_ids = self.get_existing_weather_ids()
 
-        # Add rounded start time and fetch weather data for each row
-        self.df["rounded_start_time"] = self.df["start_time"].apply(
-            self.round_time_to_nearest_hour
+        # Filter out activities that already have weather data
+        missing_weather_ids = list(
+            set(existing_activity_ids) - set(existing_weather_ids)
         )
-        self.df["weather_data"] = self.df.apply(
+
+        if not missing_weather_ids:
+            logger.info("All activities already have weather data.")
+            return pd.DataFrame()  # No new data to fetch
+
+        # Filter self.df to include only rows with missing weather data
+        df_missing_weather = self.df[self.df["id"].isin(missing_weather_ids)]
+
+        # Fetch weather data for those activities
+        df_missing_weather["weather_data"] = df_missing_weather.apply(
             self.fetch_weather_data, axis=1, base_url=self.BASE_URL
         )
-        successful_fetches = self.df["weather_data"].notnull().sum()
-        logger.debug(
-            f"Successfully fetched weather data for {successful_fetches} out of {total_rows} rows"
-        )
+        logger.info(f"Fetched weather data for {len(df_missing_weather)} activities.")
 
-        return self.extract_weather_info()
+        # Return the dataframe with fetched weather data
+        return self.extract_weather_info(df_missing_weather)
