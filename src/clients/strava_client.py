@@ -2,6 +2,7 @@
 import requests
 from loguru import logger
 from src.clients.streams import StreamClient
+from utils import timer
 
 
 class StravaClient:
@@ -23,7 +24,7 @@ class StravaClient:
 
         if self.access_token is None:
             self.refresh_access_token()
-
+    @timer
     def refresh_access_token(self):
         """Refresh the access token using the refresh token."""
         url = "https://www.strava.com/oauth/token"
@@ -66,6 +67,7 @@ class StravaClient:
             logger.error(f"Request to {endpoint} failed: {e}")
             raise
 
+    @timer
     def get_activities(self, per_page=200):
         """Fetch the athlete's activities."""
         params = {"per_page": per_page}
@@ -88,4 +90,5 @@ class StravaClient:
         return self.make_request(f"athletes/{self.athlete_id}/stats")
 
     def get_gear_details(self, gear_id):
+        """Fetch details of a specific gear item by ID."""
         return self.make_request(f"gear/{gear_id}")
