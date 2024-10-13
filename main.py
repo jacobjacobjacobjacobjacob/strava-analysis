@@ -28,7 +28,6 @@ def main():
 
 
 if __name__ == "__main__":
-
     load_dotenv()
 
     # Initialize Client

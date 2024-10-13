@@ -1,4 +1,4 @@
-# src/client/streams.py
+# src/clients/streams.py
 from src.assets.constants import VALID_STREAM_TYPES
 from loguru import logger
 

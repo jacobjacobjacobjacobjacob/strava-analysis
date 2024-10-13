@@ -1,13 +1,9 @@
-# src/client/client.py
-import os
-import sys
+# src/clients/strava_client.py
 import requests
 from dotenv import load_dotenv
 from loguru import logger
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from src.assets.constants import VALID_STREAM_TYPES
-from src.client.streams import StreamClient
+from src.clients.streams import StreamClient
 
 
 class StravaClient:
