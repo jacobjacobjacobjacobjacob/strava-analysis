@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 from dotenv import load_dotenv
-from src.client.client import StravaClient
+from src.clients.strava_client import StravaClient
 from src.models.processing import process_data
 from src.models.activity import Activity
 from src.models.gear import Gear

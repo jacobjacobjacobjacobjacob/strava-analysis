@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from src.assets.constants import VALID_STREAM_TYPES
 from src.client.streams import StreamClient
 
+
 class StravaClient:
     def __init__(
         self,
@@ -45,7 +46,7 @@ class StravaClient:
             self.refresh_token = data["refresh_token"]
             self.expires_at = data["expires_at"]
             logger.info("Access token refreshed successfully.")
-            
+
         else:
             logger.error(f"Failed to refresh token: {e}")
 
@@ -71,7 +72,6 @@ class StravaClient:
             logger.error(f"Request to {endpoint} failed: {e}")
             raise
 
-
     def get_activities(self, per_page=200):
         """Fetch the athlete's activities."""
         params = {"per_page": per_page}
@@ -80,7 +80,7 @@ class StravaClient:
     def get_detailed_activity(self, activity_id):
         """Fetch details of a specific activity by ID."""
         return self.make_request(f"activities/{activity_id}")
-    
+
     def get_activity_zones(self, activity_id):
         """Fetch heart rate and power zones for a specific activity."""
         return self.make_request(f"activities/{activity_id}/zones")
@@ -92,37 +92,6 @@ class StravaClient:
     def get_athlete_stats(self):
         """Fetch activity stats for the athlete"""
         return self.make_request(f"athletes/{self.athlete_id}/stats")
-    
+
     def get_gear_details(self, gear_id):
         return self.make_request(f"gear/{gear_id}")
-
-
-
-if __name__ == "__main__":
-    load_dotenv()
-
-    # Initialize Client
-    client = StravaClient(
-        client_id=os.getenv("STRAVA_CLIENT_ID"),
-        client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
-        refresh_token=os.getenv("STRAVA_REFRESH_TOKEN"),
-        athlete_id=os.getenv("STRAVA_ATHLETE_ID"),
-    )
-    stream_types = ["time", "distance"]
-    activity_id = "12433392206"
-
-
-    # Fetch latest activities
-    # activities = client.get_activities(per_page=5)
-    # print(activities)
-
-    # Get detailed activity
-    activity = client.get_detailed_activity(activity_id="12455871622")
-    print(type(activity))
-
-    # Get athlete stats
-    #stats = client.get_athlete_stats()
-    #print(json.dumps(stats, indent=4))
-
-    # laps = client.get_activity_laps(activity_id="12455871622")
-    # print(json.dumps(laps, indent=4))

@@ -69,6 +69,8 @@ def replace_nan_with_mean(df: pd.DataFrame) -> pd.DataFrame:
     """
     return df.fillna(df.mean(numeric_only=True))
 
+def add_weather_data(df: pd.DataFrame, weather_data: pd.DataFrame) -> pd.DataFrame:
+    pass
 
 def process_data(df: pd.DataFrame) -> pd.DataFrame:
     """

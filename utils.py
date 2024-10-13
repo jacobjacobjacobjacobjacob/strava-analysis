@@ -40,3 +40,19 @@ MONTH_ORDER = [
 WEEKDAY_MAPPING = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
 
 WEEKDAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+WEATHER_CODE_MAPPING = {
+    0: "Clear sky",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Cloudy",
+    4: "Overcast",
+    45: "Fog at a distance",
+    5: "Fog",
+    6: "Drizzle",
+    7: "Rain",
+    8: "Showers",
+    9: "Thunderstorms",
+    10: "Snow",
+    11: "Snow showers",
+}

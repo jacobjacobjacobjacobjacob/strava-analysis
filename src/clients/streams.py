@@ -1,5 +1,4 @@
 # src/client/streams.py
-
 from src.assets.constants import VALID_STREAM_TYPES
 from loguru import logger
 
@@ -12,6 +11,7 @@ class StreamClient:
         """Private method to fetch multiple streams for a given activity."""
         for stream_type in stream_types:
             if stream_type not in VALID_STREAM_TYPES:
+                logger.error(f"Invalid stream type requested: {stream_type}")
                 raise ValueError(f"Invalid stream type requested: {stream_type}")
 
         stream_types_str = ",".join(stream_types)
@@ -44,6 +44,7 @@ class StreamClient:
     def extract_stream_data(streams, stream_type):
         """Extract data from a specific stream type."""
         if not isinstance(streams, dict):
+            logger.error("Expected streams to be a dictionary.")
             raise ValueError("Expected streams to be a dictionary.")
 
         stream = streams.get(stream_type)
