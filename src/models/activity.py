@@ -55,7 +55,7 @@ class Activity:
 
     def save_to_db(self):
         """Method to save activities to the database."""
-        from database.db import insert_activity
+        from src.database.db import insert_activity
 
         insert_activity(self)
 
