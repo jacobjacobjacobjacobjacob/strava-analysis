@@ -18,6 +18,7 @@ def main():
     activities_df = pd.DataFrame(activities)
     df = process_data(activities_df)
 
+
     # Process and save activities to the database
     Activity.process_activities(df)
 
@@ -37,12 +38,9 @@ if __name__ == "__main__":
         refresh_token=os.getenv("STRAVA_REFRESH_TOKEN"),
         athlete_id=os.getenv("STRAVA_ATHLETE_ID"),
     )
-
-
-
     create_activities_table()
-    #create_gear_table()
+    # create_gear_table()
     main()
 
-    #activity = client.get_detailed_activity(activity_id="12455871622")
-    #zones = client.get_activity_zones(activity_id="12455871622")
+    # activity = client.get_detailed_activity(activity_id="12455871622")
+    # zones = client.get_activity_zones(activity_id="12455871622")

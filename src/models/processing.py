@@ -12,7 +12,8 @@ def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
         "total_elevation_gain": "elevation_gain",
         "start_date_local": "date",
         "trainer": "indoor",
-        "suffer_score": "intensity"
+        "suffer_score": "intensity",
+        "start_latlng": "lat_lng"
     })
 
 
@@ -51,9 +52,20 @@ def split_datetime_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def replace_nan_values(df: pd.DataFrame) -> pd.DataFrame:
+def replace_lat_lng_values(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Replaces NaN values with column means for specific columns.
+    Converts lat_lng column lists to comma-separated strings or "" if empty.
+    """
+    # Ensure lat_lng is always a string
+    df["lat_lng"] = df["lat_lng"].apply(
+        lambda x: ', '.join(map(str, x)) if isinstance(x, list) and len(x) > 0 else "0, 0"
+    )
+    return df
+
+
+def replace_nan_with_mean(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replaces NaN values in numeric columns with the column mean.
     """
     return df.fillna(df.mean(numeric_only=True))
 
@@ -64,7 +76,6 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Input must be a pandas DataFrame.")
-
     df = df[df["sport_type"].isin(["Ride", "Run"])]
 
     try:
@@ -72,7 +83,8 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
             df.pipe(rename_columns)
               .pipe(convert_units)
               .pipe(split_datetime_columns)
-              .pipe(replace_nan_values)
+              .pipe(replace_nan_with_mean)
+              .pipe(replace_lat_lng_values)
               .pipe(map_months)
         )
     except Exception as e:
@@ -83,5 +95,5 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
         "id", "date", "month", "day_of_week", "start_time", "end_time", 
         "sport_type", "indoor", "distance", "duration", "elevation_gain", 
         "gear_id", "average_heartrate", "average_speed", "average_cadence", 
-        "average_temp", "average_watts", "intensity"
+        "average_temp", "average_watts", "intensity", "lat_lng"
     ]]

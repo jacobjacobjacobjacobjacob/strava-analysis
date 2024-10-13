@@ -20,6 +20,7 @@ class Activity:
         average_temp,
         average_watts,
         intensity,
+        lat_lng
     ):
         self.activity_id = activity_id
         self.date = date
@@ -39,6 +40,7 @@ class Activity:
         self.average_temp = average_temp
         self.average_watts = average_watts
         self.intensity = intensity
+        self.lat_lng = lat_lng
 
     def __repr__(self):
         return (
@@ -48,7 +50,7 @@ class Activity:
             f"duration={self.duration}, elevation_gain={self.elevation_gain}, gear_id='{self.gear_id}', "
             f"average_heartrate={self.average_heartrate}, average_speed={self.average_speed}, "
             f"average_cadence={self.average_cadence}, average_temp={self.average_temp}, "
-            f"average_watts={self.average_watts}, intensity={self.intensity})"
+            f"average_watts={self.average_watts}, intensity={self.intensity}, lat-lng={self.lat_lng})"
         )
 
     def save_to_db(self):
@@ -81,6 +83,7 @@ class Activity:
                 average_temp=row["average_temp"],
                 average_watts=row["average_watts"],
                 intensity=row["intensity"],
+                lat_lng=row["lat_lng"],
             )
             # Save the Activity instance to the database
             activity.save_to_db()

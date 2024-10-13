@@ -4,6 +4,8 @@ import sqlite3
 from loguru import logger
 
 
+
+
 def connect_activities_db(db_name="activities.db"):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
     db_path = os.path.join(project_root, "data", db_name)
@@ -41,9 +43,10 @@ def create_activities_table():
                    average_cadence REAL,
                    average_temp REAL,
                    average_watts REAL,
-                   intensity INTEGER
-                   )
-                   
+                   intensity INTEGER,
+                   lat_lng TEXT
+
+                   )            
     """
     )
     conn.commit()
@@ -85,8 +88,8 @@ def insert_activity(activity):
             INSERT INTO activities (id, date, month, day_of_week, start_time, end_time, 
                 sport_type, indoor, distance, duration, elevation_gain, 
                 gear_id, average_heartrate, average_speed, average_cadence, 
-                average_temp, average_watts, intensity)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                average_temp, average_watts, intensity, lat_lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 activity.activity_id,
@@ -107,10 +110,11 @@ def insert_activity(activity):
                 activity.average_temp,
                 activity.average_watts,
                 activity.intensity,
+                activity.lat_lng
             ),
         )
         logger.info(f"Inserted new activity {activity.activity_id} into the database.")
-    
+
     conn.commit()
     conn.close()
 
