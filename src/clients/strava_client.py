@@ -1,8 +1,6 @@
 # src/clients/strava_client.py
 import requests
-from dotenv import load_dotenv
 from loguru import logger
-
 from src.clients.streams import StreamClient
 
 
