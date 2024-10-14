@@ -68,8 +68,8 @@ def extract_and_compare_ids():
         )
         logger.debug(f"Missing IDs: {diff_ids}")
 
-
     return diff_ids
+
 
 # Query to join the databses for later:
 
