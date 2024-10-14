@@ -39,6 +39,8 @@ def main():
     activities = strava_client.get_activities()
     activities_df = pd.DataFrame(activities)
     activities_df = process_activity_data(activities_df)
+    # Insert new activities into the database
+    Activity.process_activities(activities_df)
 
     # Get IDs of activities that are missing weather data
     missing_weather_ids = (
@@ -64,7 +66,7 @@ def main():
         # Process and save new weather data to the database
         Weather.process_weather(weather_df)
 
-    Activity.process_activities(activities_df)
+    
 
     # Get unique gear IDs and process them
     gear_list = activities_df["gear_id"].dropna().unique().tolist()
