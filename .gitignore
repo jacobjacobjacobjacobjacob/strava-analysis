@@ -7,3 +7,4 @@ venv/
 *.db
 __pycache__/
 *.pyc
+setup.py
