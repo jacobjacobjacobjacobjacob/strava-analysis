@@ -76,5 +76,5 @@ def main():
 if __name__ == "__main__":
     activities_df, weather_df = main()
 
-    # activity = client.get_detailed_activity(activity_id="12455871622")
-    # zones = client.get_activity_zones(activity_id="12455871622")
+    # activity = client.get_detailed_activity(activity_id="")
+    # zones = client.get_activity_zones(activity_id="")
