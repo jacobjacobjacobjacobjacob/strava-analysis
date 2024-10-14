@@ -21,6 +21,7 @@ from src.database.queries import extract_and_compare_ids
 
 
 def main():
+    """ Main function to fetch and process Strava activities and weather data. """
     load_dotenv()
     strava_client = StravaClient(
         client_id=os.getenv("STRAVA_CLIENT_ID"),
@@ -40,14 +41,20 @@ def main():
     activities_df = process_activity_data(activities_df)
 
     # Get IDs of activities that are missing weather data
-    missing_weather_ids = extract_and_compare_ids()  # Compare activities and weather database IDs
+    missing_weather_ids = (
+        extract_and_compare_ids()
+    )  # Compare activities and weather database IDs
 
     if len(missing_weather_ids) == 0:
         weather_df = pd.DataFrame()  # Empty weather DataFrame if no missing data
     else:
-        logger.info(f"Fetching weather data for {len(missing_weather_ids)} missing activities.")
+        logger.info(
+            f"Fetching weather data for {len(missing_weather_ids)} missing activities."
+        )
         # Filter activities_df to only include the missing activities
-        activities_missing_weather = activities_df[activities_df["id"].isin(missing_weather_ids)]
+        activities_missing_weather = activities_df[
+            activities_df["id"].isin(missing_weather_ids)
+        ]
 
         # Fetch weather for activities that don't have it
         weather_client = WeatherClient(activities_missing_weather.copy())
@@ -56,7 +63,7 @@ def main():
 
         # Process and save new weather data to the database
         Weather.process_weather(weather_df)
-    
+
     Activity.process_activities(activities_df)
 
     # Get unique gear IDs and process them
@@ -205,7 +212,7 @@ if __name__ == "__main__":
 #         """Extracts and expands weather information from the fetched data."""
 #         weather_info = df.apply(self.extract_row_weather, axis=1).apply(pd.Series)
 #         return pd.concat([df, weather_info], axis=1)
-    
+
 
 #     def round_time_to_nearest_hour(self, time_str):
 #         # Convert the time string into a datetime object
@@ -278,4 +285,3 @@ if __name__ == "__main__":
 
 #         # Return the dataframe with fetched weather data
 #         return self.extract_weather_info(df_missing_weather)
-
