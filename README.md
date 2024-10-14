@@ -1,7 +1,7 @@
 
 # Strava Analysis Project
 
-This project is designed to analyze workout data, focusing on activities like running and cycling. It integrates multiple data sources, such as Strava data, but also retrieves weather data for the location of the individual Strava activities, and stores it in SQLite databases for further analysis.
+This project analyzes workout data, focusing on activities like running and cycling. It integrates multiple data sources, such as Strava data, and retrieves weather data for the location of individual Strava activities, storing it in SQLite databases for further analysis.
 
 ## Project Structure
 
@@ -24,9 +24,9 @@ This project is designed to analyze workout data, focusing on activities like ru
 │   ├── models               # Data models for activity, gear, and weather data
 │   │   ├── activity.py          # Model and processing for Strava activities
 │   │   ├── gear.py              # Model for gear information
-│   │   ├── processing.py        # Data processing utilities (unit conversions, renaming etc.)
+│   │   ├── processing.py        # Data processing utilities (unit conversions, renaming, etc.)
 │   │   └── weather.py           # Model for weather data
-├── utils.py                 # Utility functions used throughout the project
+│   │ utils.py                # Utility functions used throughout the project
 ```
 
 ## Setup
@@ -75,7 +75,7 @@ STRAVA_ATHLETE_ID=your_athlete_id
 
 ### Running the Analysis
 
-To run the main script, simply execute:
+To run the main script, execute:
 
 ```bash
 python main.py
@@ -91,4 +91,3 @@ The project includes clients for interacting with external services:
 ## Database
 
 The project uses SQLite databases to store activity, gear, and weather data. You can explore the database schema and write custom queries using the `db.py` and `queries.py` modules.
-
