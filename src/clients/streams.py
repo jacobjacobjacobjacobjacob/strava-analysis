@@ -1,14 +1,27 @@
 # src/clients/streams.py
-from src.assets.constants import VALID_STREAM_TYPES
 from loguru import logger
 
 
 class StreamClient:
+
     def __init__(self, strava_client):
         self.strava_client = strava_client
 
     def _get_streams(self, activity_id, stream_types):
         """Private method to fetch multiple streams for a given activity."""
+        VALID_STREAM_TYPES = [
+            "time",
+            "distance",
+            "latlng",
+            "altitude",
+            "velocity_smooth",
+            "heartrate",
+            "cadence",
+            "watts",
+            "temp",
+            "moving",
+            "grade_smooth",
+        ]
         for stream_type in stream_types:
             if stream_type not in VALID_STREAM_TYPES:
                 logger.error(f"Invalid stream type requested: {stream_type}")
