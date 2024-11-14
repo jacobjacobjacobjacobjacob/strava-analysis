@@ -18,6 +18,7 @@ def get_table_data(table_name: str, db_name: str):
         df = pd.read_sql_query(query, conn)
 
         return df
+    
     except sqlite3.Error as e:
         logger.error(f"Error retrieving table data: {e}")
         return None
@@ -25,10 +26,18 @@ def get_table_data(table_name: str, db_name: str):
         if conn:
             conn.close()
 
+def get_all_activities(db_path="data/activities.db"):
+    """Retrieve all activities from the database."""
+    conn = sqlite3.connect(db_path)
+    query = "SELECT * FROM activities"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
 
 def extract_and_compare_ids():
     """Extracts ids from activities and weather databases, and returns ids present in activities but not in weather."""
-
+    
     def extract_ids(conn, table_name):
         """Extracts the ids from a given table in a database using an existing connection."""
         try:
@@ -71,9 +80,24 @@ def extract_and_compare_ids():
     return diff_ids
 
 
-# Query to join the databses for later:
+def get_sport_type_ids(db_name, table_name, sport_type):
+    """Retrieves a list of IDs from the specified table where sport_type matches."""
+    try:
+        # Connect to the activities database
+        conn = connect_activities_db()
+        cursor = conn.cursor()
 
-# SELECT a.*, w.temperature, w.precipitation
+        # Prepare and execute the query
+        query = f"SELECT id FROM {table_name} WHERE sport_type = ?"
+        cursor.execute(query, (sport_type,))
 
-# FROM activities a
-# JOIN weather w ON a.activity_id = w.activity_id;
+        # Fetch and return the IDs
+        ids = [row[0] for row in cursor.fetchall()]
+        logger.debug(f"Extracted {len(ids)} IDs from the {table_name} table for sport_type '{sport_type}'.")
+        return ids
+    except sqlite3.Error as e:
+        logger.error(f"Error retrieving IDs for sport_type '{sport_type}': {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
