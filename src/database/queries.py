@@ -34,6 +34,13 @@ def get_all_activities(db_path="data/activities.db"):
     conn.close()
     return df
 
+def get_all_weather_data(db_path="data/weather.db"):
+    """Retrieve all weather data from the database."""
+    conn = sqlite3.connect(db_path)
+    query = "SELECT * FROM weather"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
 
 def extract_and_compare_ids():
     """Extracts ids from activities and weather databases, and returns ids present in activities but not in weather."""

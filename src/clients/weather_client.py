@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from loguru import logger
-from utils import map_weather_codes
+from src.utils import map_weather_codes
 
 
 class WeatherClient:

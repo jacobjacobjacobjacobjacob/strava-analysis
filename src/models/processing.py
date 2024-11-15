@@ -1,7 +1,7 @@
 # src/models/processing.py
 import pandas as pd
 from loguru import logger
-from utils import map_months, map_weather_codes
+from src.utils import map_months, map_weather_codes
 
 
 def rename_activity_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -78,13 +78,6 @@ def replace_lat_lng_values(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def replace_nan_with_mean(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Replaces NaN values in numeric columns with the column mean.
-    """
-    return df.fillna(df.mean(numeric_only=True))
-
-
 def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Processes raw activity data.
@@ -98,7 +91,6 @@ def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
             df.pipe(rename_activity_columns)
             .pipe(convert_units)
             .pipe(split_datetime_columns)
-            .pipe(replace_nan_with_mean)
             .pipe(replace_lat_lng_values)
             .pipe(map_months)
         )
