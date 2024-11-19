@@ -22,6 +22,11 @@ def connect_gear_db():
 def connect_weather_db():
     return connect_db("weather.db")
 
+def connect_laps_db():
+    return connect_db("laps.db")
+
+def connect_splits_db():
+    return connect_db("splits.db")
 
 def create_activities_table():
     conn = connect_activities_db()
@@ -92,6 +97,53 @@ def create_weather_table():
                    snow REAL
                    )            
     """
+    )
+    conn.commit()
+    conn.close()
+
+def create_laps_table():
+    conn = connect_laps_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS laps (
+            id INTEGER,
+            lap_name TEXT,
+            duration REAL,
+            date TEXT,
+            distance REAL,
+            average_speed REAL,
+            lap_index INTEGER,
+            split INTEGER,
+            elevation_gain REAL,
+            average_heartrate REAL,
+            pace_zone TEXT,
+            PRIMARY KEY (id, lap_index)
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_splits_table():
+    conn = connect_splits_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS splits (
+            id INTEGER,
+            distance REAL,
+            elevation_difference REAL,
+            duration REAL,
+            split INTEGER,
+            average_speed REAL,
+            average_gap REAL,
+            average_heartrate REAL,
+            pace_zone TEXT,
+            PRIMARY KEY (id, split)
+        )
+        """
     )
     conn.commit()
     conn.close()
@@ -221,6 +273,82 @@ def insert_weather(weather):
         logger.info(
             f"Inserted new weather data for activity {weather.activity_id} into the database."
         )
+
+    conn.commit()
+    conn.close()
+
+def insert_lap(lap):
+    conn = connect_laps_db()
+    cursor = conn.cursor()
+
+    # Check if the lap already exists
+    cursor.execute(
+        "SELECT 1 FROM laps WHERE id = ? AND lap_index = ?",
+        (lap.id, lap.lap_index),
+    )
+    existing_lap = cursor.fetchone()
+
+    if not existing_lap:
+        cursor.execute(
+            """
+            INSERT INTO laps (
+                id, lap_name, duration, date, distance, average_speed, 
+                lap_index, split, elevation_gain, average_heartrate, pace_zone
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                lap.id,
+                lap.lap_name,
+                lap.duration,
+                lap.date,
+                lap.distance,
+                lap.average_speed,
+                lap.lap_index,
+                lap.split,
+                lap.elevation_gain,
+                lap.average_heartrate,
+                lap.pace_zone,
+            ),
+        )
+        logger.info(f"Inserted new lap for activity {lap.id}, lap index {lap.lap_index}")
+
+    conn.commit()
+    conn.close()
+
+def insert_split(split):
+    conn = connect_splits_db()
+    cursor = conn.cursor()
+
+    # Check if the split already exists
+    cursor.execute(
+        "SELECT 1 FROM splits WHERE id = ? AND split = ?",
+        (split.id, split.split),
+    )
+    existing_split = cursor.fetchone()
+
+    if not existing_split:
+        cursor.execute(
+            """
+            INSERT INTO splits (
+                id, distance, elevation_difference, duration, split, 
+                average_speed, average_gap, average_heartrate, pace_zone
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                split.id,
+                split.distance,
+                split.elevation_difference,
+                split.duration,
+                split.split,
+                split.average_speed,
+                split.average_gap,
+                split.average_heartrate,
+                split.pace_zone,
+            ),
+        )
+        logger.info(f"Inserted new split for activity {split.id}, split {split.split}")
 
     conn.commit()
     conn.close()
