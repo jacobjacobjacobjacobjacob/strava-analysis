@@ -45,59 +45,25 @@ class StravaClient:
         else:
             logger.error(f"Failed to refresh token: {e}")
 
-    # def make_request(self, endpoint, method="GET", params=None):
-    #     """Make a request to the Strava API and return the JSON response."""
-
-    #     headers = {"Authorization": f"Bearer {self.access_token}"}
-
-    #     url = f"https://www.strava.com/api/v3/{endpoint}"
-
-    #     try:
-    #         if method == "GET":
-    #             response = requests.get(url, headers=headers, params=params)
-    #         elif method == "POST":
-    #             response = requests.post(url, headers=headers, json=params)
-    #         else:
-    #             raise ValueError(f"HTTP method {method} not supported.")
-
-    #         response.raise_for_status()  # Raise an error for bad status codes
-    #         return response.json()
-    #     except requests.exceptions.RequestException as e:
-    #         logger.error(f"Request to {endpoint} failed: {e}")
-    #         raise
     def make_request(self, endpoint, method="GET", params=None):
-        """Make a paginated request to the Strava API and return all results."""
+        """Make a request to the Strava API and return the JSON response."""
 
         headers = {"Authorization": f"Bearer {self.access_token}"}
+
         url = f"https://www.strava.com/api/v3/{endpoint}"
-        all_data = []
-        page = 1  
-        params = params or {}  #
 
         try:
-            while True:
-                params.update({"page": page, "per_page": 200})
-                if method == "GET":
-                    response = requests.get(url, headers=headers, params=params)
-                elif method == "POST":
-                    response = requests.post(url, headers=headers, json=params)
-                else:
-                    raise ValueError(f"HTTP method {method} not supported.")
+            if method == "GET":
+                response = requests.get(url, headers=headers, params=params)
+            elif method == "POST":
+                response = requests.post(url, headers=headers, json=params)
+            else:
+                raise ValueError(f"HTTP method {method} not supported.")
 
-                response.raise_for_status()  # Raise an error for bad status codes
-                data = response.json()
-
-                if not data:  # Exit if no more data
-                    break
-
-                all_data.extend(data)  # Append current page data
-                page += 1  # Move to the next page
-
-            return all_data  # Return all paginated data
-
+            response.raise_for_status()  # Raise an error for bad status codes
+            return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Request to {endpoint} failed: {e}")
-            raise
 
     @timer
     def get_activities(self, per_page=200):

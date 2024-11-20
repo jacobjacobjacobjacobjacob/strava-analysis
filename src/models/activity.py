@@ -57,11 +57,13 @@ class Activity:
         """Method to save activities to the database."""
         from src.database.db import insert_activity
 
-        insert_activity(self)
+        return insert_activity(self)
 
     @classmethod
     def process_activities(cls, activities_df):
         """Process and save activities from a DataFrame to the database."""
+        new_activity_ids = []
+
         for index, row in activities_df.iterrows():
             # Create an Activity instance from the row
             activity = cls(
@@ -86,4 +88,8 @@ class Activity:
                 lat_lng=row["lat_lng"],
             )
             # Save the Activity instance to the database
-            activity.save_to_db()
+            # activity.save_to_db()
+            if activity.save_to_db():  
+                new_activity_ids.append(activity.activity_id)
+
+        return new_activity_ids

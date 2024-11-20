@@ -108,3 +108,22 @@ def get_sport_type_ids(db_name, table_name, sport_type):
     finally:
         if conn:
             conn.close()
+
+def fetch_all_ids(year: int = None):
+        """Fetch all activity IDs from the activities table. Optionally filter by year."""
+        conn = connect_activities_db()
+        cursor = conn.cursor()
+        
+        # Query to fetch IDs for the specified year
+        query = """
+            SELECT id 
+            FROM activities 
+            WHERE date LIKE ? 
+            ORDER BY id ASC
+        """
+        cursor.execute(query, (f"{year}%",))
+        
+        ids = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        return ids

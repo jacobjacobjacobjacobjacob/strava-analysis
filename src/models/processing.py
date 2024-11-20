@@ -1,7 +1,8 @@
 # src/models/processing.py
 import pandas as pd
 from loguru import logger
-from src.utils import map_months, map_weather_codes
+import ast
+from src.utils import map_months, map_weather_codes, PACE_ZONES_MAPPING
 
 
 def rename_activity_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -76,6 +77,92 @@ def replace_lat_lng_values(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
     return df
+
+def extract_splits_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Extracts splits data from the dataframe with detailed activity data"""
+    filtered_df = df[["id", "sport_type", "splits_metric", "laps", "available_zones"]]
+    return filtered_df
+
+
+def explode_column(detailed_df_raw, column):
+    """Explodes a column of dictionaries into separate columns."""
+
+    # Extract the column
+    metric_raw = detailed_df_raw[column]
+    # Ensure all rows are valid lists (convert strings to actual Python lists if necessary)
+    metric_cleaned = metric_raw.apply(
+        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
+    )
+    # Drop rows with NaN or invalid values
+    metric_cleaned = metric_cleaned.dropna()
+    
+    # Explode the list of dictionaries into individual rows
+    metric_exploded = metric_cleaned.explode()
+   
+    # Normalize the dictionary entries into columns
+    metric_df = pd.json_normalize(metric_exploded)
+
+    return metric_df
+
+def clean_laps_data(df: pd.DataFrame) -> pd.DataFrame:
+    columns_to_drop_laps = ["id", "start_date_local", "resource_state", "start_date", "max_speed", "start_index", "end_index", "device_watts", "max_heartrate", "activity.visibility", "activity.resource_state", "athlete.id", "elapsed_time", "athlete.resource_state"]
+    df = df.drop(columns=columns_to_drop_laps, axis=1)
+    
+    # Rename columns
+    laps_rename_mapping = {
+    "name": "lap_name",
+    "moving_time": "duration",
+    "total_elevation_gain": "elevation_gain",
+    "activity.id": "id",
+}
+    df = df.rename(columns=laps_rename_mapping)
+    
+    # Map pace zones
+    df["pace_zone"] = df["pace_zone"].map(PACE_ZONES_MAPPING)
+    
+    
+    # Convert duration from seconds to minutes
+    df["duration"] = df["duration"] / 60
+    
+    # Convert speeds from m/s to km/h
+    df["average_speed"] = df["average_speed"] * 3.6
+
+
+    
+    # Round specific columns
+    laps_columns_to_round = ["duration", "average_speed", "distance", "average_heartrate"]
+    df[laps_columns_to_round] = df[laps_columns_to_round].round(1)
+    
+    return df
+
+def clean_splits_data(df: pd.DataFrame) -> pd.DataFrame:
+    # Rename columns
+    splits_rename_mapping = {
+    "moving_time": "duration",
+    "average_grade_adjusted_speed": "average_gap"
+    }
+    df = df.rename(columns=splits_rename_mapping)
+    
+    # Map pace zones
+    df["pace_zone"] = df["pace_zone"].map(PACE_ZONES)
+    
+    # Drop unnecessary columns
+    df = df.drop(columns="elapsed_time")
+    
+    # Convert duration from seconds to minutes
+    df["duration"] = df["duration"] / 60
+    
+    # Convert speeds from m/s to km/h
+    speed_columns = ["average_speed", "average_gap"]
+    df[speed_columns] = df[speed_columns] * 3.6
+    
+    # Round specific columns
+    columns_to_round = ["duration", "average_speed", "average_gap", "average_heartrate"]
+    df[columns_to_round] = df[columns_to_round].round(1)
+    
+    return df
+
+
 
 
 def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:

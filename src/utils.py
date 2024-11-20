@@ -90,3 +90,12 @@ WEATHER_CODE_MAPPING = {
     96: "Thunderstorm with slight hail",
     99: "Thunderstorm with heavy hail",
 }
+
+PACE_ZONES_MAPPING = {
+    1: "Z1 - Active Recovery",
+    2: "Z2 - Endurance",
+    3: "Z3 - Tempo",
+    4: "Z4 - Threshold",
+    5: "Z5 - VO2 Max",
+    6: "Z6 - Anaerobic"
+}

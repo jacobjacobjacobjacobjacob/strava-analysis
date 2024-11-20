@@ -1,6 +1,8 @@
 # src/database/db.py
 import os
 import sqlite3
+import json
+import pandas as pd
 from loguru import logger
 
 
@@ -10,14 +12,11 @@ def connect_db(db_name):
     conn = sqlite3.connect(db_path)
     return conn
 
-
 def connect_activities_db():
     return connect_db("activities.db")
 
-
 def connect_gear_db():
     return connect_db("gear.db")
-
 
 def connect_weather_db():
     return connect_db("weather.db")
@@ -27,6 +26,7 @@ def connect_laps_db():
 
 def connect_splits_db():
     return connect_db("splits.db")
+
 
 def create_activities_table():
     conn = connect_activities_db()
@@ -60,7 +60,6 @@ def create_activities_table():
     conn.commit()
     conn.close()
 
-
 def create_gear_table():
     conn = connect_gear_db()
     cursor = conn.cursor()
@@ -79,7 +78,6 @@ def create_gear_table():
     )
     conn.commit()
     conn.close()
-
 
 def create_weather_table():
     conn = connect_weather_db()
@@ -125,28 +123,26 @@ def create_laps_table():
     conn.commit()
     conn.close()
 
-
 def create_splits_table():
+    """
+    Create the splits table in the splits.db database.
+    """
     conn = connect_splits_db()
     cursor = conn.cursor()
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS splits (
-            id INTEGER,
-            distance REAL,
-            elevation_difference REAL,
-            duration REAL,
-            split INTEGER,
-            average_speed REAL,
-            average_gap REAL,
-            average_heartrate REAL,
-            pace_zone TEXT,
-            PRIMARY KEY (id, split)
+            id INTEGER PRIMARY KEY,
+            sport_type TEXT,
+            splits_metric TEXT,
+            laps TEXT,
+            available_zones TEXT
         )
         """
     )
     conn.commit()
     conn.close()
+
 
 
 def insert_activity(activity):
@@ -189,10 +185,15 @@ def insert_activity(activity):
                 activity.lat_lng,
             ),
         )
+        conn.commit()
+        conn.close()
         logger.info(f"Inserted new activity {activity.activity_id} into the database.")
+        return True  # Activity was inserted
+    else:
+        conn.close()
+        return False  # Activity already exists
 
-    conn.commit()
-    conn.close()
+
 
 
 def insert_gear(gear):
@@ -242,7 +243,6 @@ def insert_gear(gear):
 
     conn.commit()
     conn.close()
-
 
 def insert_weather(weather):
     conn = connect_weather_db()
@@ -315,40 +315,38 @@ def insert_lap(lap):
 
     conn.commit()
     conn.close()
+def insert_split(row):
+    """
+    Insert a row into the splits table in splits.db only if it doesn't already exist.
 
-def insert_split(split):
+    Args:
+        row (pd.Series): A row from the DataFrame.
+    """
     conn = connect_splits_db()
     cursor = conn.cursor()
 
     # Check if the split already exists
-    cursor.execute(
-        "SELECT 1 FROM splits WHERE id = ? AND split = ?",
-        (split.id, split.split),
-    )
+    cursor.execute("SELECT 1 FROM splits WHERE id = ?", (int(row["id"]),))
     existing_split = cursor.fetchone()
 
     if not existing_split:
+        # Insert the split if it does not exist
         cursor.execute(
             """
-            INSERT INTO splits (
-                id, distance, elevation_difference, duration, split, 
-                average_speed, average_gap, average_heartrate, pace_zone
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO splits (id, sport_type, splits_metric, laps, available_zones)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
-                split.id,
-                split.distance,
-                split.elevation_difference,
-                split.duration,
-                split.split,
-                split.average_speed,
-                split.average_gap,
-                split.average_heartrate,
-                split.pace_zone,
-            ),
+                int(row["id"]),  # Ensure id is an integer
+                row["sport_type"],  # sport_type is already a string
+                json.dumps(row["splits_metric"].tolist() if isinstance(row["splits_metric"], pd.Series) else row["splits_metric"]),
+                json.dumps(row["laps"].tolist() if isinstance(row["laps"], pd.Series) else row["laps"]),
+                json.dumps(row["available_zones"].tolist() if isinstance(row["available_zones"], pd.Series) else row["available_zones"]),
+            )
         )
-        logger.info(f"Inserted new split for activity {split.id}, split {split.split}")
+        logger.info(f"Inserted new split data for ID {row['id']} into the database.")
+    else:
+        logger.info(f"Split data for ID {row['id']} already exists in the database.")
 
     conn.commit()
     conn.close()

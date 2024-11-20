@@ -1,5 +1,6 @@
 # src/clients/streams.py
 from loguru import logger
+import pandas as pd
 
 
 class StreamClient:
@@ -52,6 +53,25 @@ class StreamClient:
 
     def get_heartrate_stream(self, activity_id):
         return self._get_streams(activity_id, ["heartrate"])
+    
+    def get_activity_zones(self, activity_id):
+        """Fetch heart rate and pace zones for a specific activity."""
+        return self.strava_client.make_request(f"activities/{activity_id}/zones")
+    
+    def get_available_streams(self, activity_id):
+        """Returns a list of available stream types."""
+
+        try:
+            streams = self.strava_client.make_request(
+                f"activities/{activity_id}/streams?keys=all&key_by_type=true"
+            )
+        except Exception as e:
+            logger.error(f"Error fetching streams for activity {activity_id}: {e}")
+            return []
+
+
+        available_streams = list(streams.keys())
+        return available_streams
 
     @staticmethod
     def extract_stream_data(streams, stream_type):
@@ -64,3 +84,30 @@ class StreamClient:
         if stream and isinstance(stream, dict):
             return stream.get("data", [])
         return []  # Return empty list if stream_type not found
+    
+    @staticmethod
+    def parse_activity_zones(zones):
+        """Parse activity zones data into a structured format."""
+        if not isinstance(zones, list):
+            raise ValueError("Zones data should be a list.")
+
+        parsed_zones = []
+        for zone in zones:
+            zone_type = zone.get("type")
+            distribution_buckets = zone.get("distribution_buckets", [])
+            for bucket in distribution_buckets:
+                parsed_zones.append(
+                    {
+                        "zone_type": zone_type,
+                        "min": bucket.get("min"),
+                        "max": bucket.get("max"),
+                        "time_in_zone": bucket.get("time"),
+                    }
+                )
+
+        return pd.DataFrame(parsed_zones)
+
+    def get_parsed_activity_zones(self, activity_id):
+        """Fetch and parse activity zones for a given activity."""
+        zones = self.get_activity_zones(activity_id)
+        return self.parse_activity_zones(zones)
