@@ -27,6 +27,8 @@ def connect_laps_db():
 def connect_splits_db():
     return connect_db("splits.db")
 
+def connect_zones_db():
+    return connect_db("zones.db")
 
 def create_activities_table():
     conn = connect_activities_db()
@@ -143,7 +145,26 @@ def create_splits_table():
     conn.commit()
     conn.close()
 
-
+def create_zones_table():
+    """
+    Create the zones table in the zones.db database.
+    """
+    conn = connect_zones_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS zones (
+            activity_id INTEGER,
+            zone_type TEXT,
+            min_value INTEGER,
+            max_value INTEGER,
+            time_in_zone REAL,
+            PRIMARY KEY (activity_id, zone_type, min_value, max_value)
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
 
 def insert_activity(activity):
     conn = connect_activities_db()
@@ -315,6 +336,7 @@ def insert_lap(lap):
 
     conn.commit()
     conn.close()
+
 def insert_split(row):
     """
     Insert a row into the splits table in splits.db only if it doesn't already exist.
@@ -350,3 +372,43 @@ def insert_split(row):
 
     conn.commit()
     conn.close()
+
+def insert_zone(row):
+    """
+    Insert a row into the zones table in zones.db only if it doesn't already exist.
+
+    Args:
+        row (pd.Series): A row from the DataFrame.
+    """
+    conn = connect_zones_db()
+    cursor = conn.cursor()
+
+    # Check if the zone already exists
+    cursor.execute(
+        "SELECT 1 FROM zones WHERE activity_id = ? AND zone_type = ? AND min_value = ? AND max_value = ?",
+        (row["activity_id"], row["zone_type"], row["min_value"], row["max_value"]),
+    )
+    existing_zone = cursor.fetchone()
+
+    if not existing_zone:
+        # Insert the zone if it does not exist
+        cursor.execute(
+            """
+            INSERT INTO zones (activity_id, zone_type, min_value, max_value, time_in_zone)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                row["activity_id"],
+                row["zone_type"],
+                row["min_value"],
+                row["max_value"],
+                row["time_in_zone"],
+            ),
+        )
+        conn.commit()
+        conn.close()
+        logger.info(f"Inserted new zone data for Activity ID {row['activity_id']}")
+        return True  # New data was inserted
+    else:
+        conn.close()
+        return False  # Existing data, no insertion
