@@ -405,10 +405,8 @@ def insert_zone(row):
                 row["time_in_zone"],
             ),
         )
-        conn.commit()
-        conn.close()
-        logger.info(f"Inserted new zone data for Activity ID {row['activity_id']}")
-        return True  # New data was inserted
     else:
-        conn.close()
-        return False  # Existing data, no insertion
+        logger.info(f"Zone data for Activity ID {row['activity_id']} already exists in the database.")
+
+    conn.commit()
+    conn.close()
