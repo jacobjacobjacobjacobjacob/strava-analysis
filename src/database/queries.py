@@ -52,7 +52,7 @@ def extract_and_compare_ids():
             query = f"SELECT id FROM {table_name};"
             cursor.execute(query)
             ids = [row[0] for row in cursor.fetchall()]
-            logger.debug(f"Extracted {len(ids)} IDs from the {table_name} table.")
+            logger.info(f"Extracted {len(ids)} IDs from the {table_name} table.")
         except sqlite3.Error as e:
             logger.error(f"Error extracting IDs from {table_name} table: {e}")
             ids = []
