@@ -1,9 +1,10 @@
 import os
 import sys
+
 import pandas as pd
 from dotenv import load_dotenv
 from loguru import logger
-
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from src.clients.strava_client import StravaClient
@@ -25,7 +26,20 @@ from src.database.queries import extract_and_compare_ids
 
 
 def main():
-    """Main function to fetch and process Strava activities and weather data."""
+    """
+    Main function to fetch and process Strava activities and weather data.
+
+    Steps:
+    1. Load environment variables.
+    2. Initialize Strava client with credentials.
+    3. Create necessary database tables.
+    4. Fetch activities from Strava.
+    5. Process and insert new activities into the database.
+    6. Identify activities missing weather data and fetch weather data for them.
+    7. Process and save new weather data to the database.
+    8. Process gear data for new activities.
+    9. Fetch detailed activity data for new activities and process splits and zones data.
+    """
     load_dotenv()
     strava_client = StravaClient(
         client_id=os.getenv("STRAVA_CLIENT_ID"),
@@ -64,7 +78,11 @@ def main():
 
         # Fetch weather for activities that don't have it
         weather_client = WeatherClient(activities_missing_weather.copy())
-        weather_df = weather_client.get_weather_data()
+        try:
+            weather_df = weather_client.get_weather_data()
+        except Exception as e:
+            logger.error(f"Error fetching weather data: {e}")
+            weather_df = pd.DataFrame()  # Empty weather DataFrame if there's an error
         weather_df = process_weather_data(weather_df)
 
         # Process and save new weather data to the database
@@ -80,8 +98,21 @@ def main():
         # Process detailed activity data for new activities
         for activity_id in new_activity_ids:
             # Fetch detailed activity info
-            detailed_activity = strava_client.get_detailed_activity(activity_id)
-            logger.debug(f"Fetched detailed activity for ID {activity_id}")
+            retry_count = 3
+            for attempt in range(retry_count):
+                try:
+                    detailed_activity = strava_client.get_detailed_activity(activity_id)
+                    logger.debug(f"Fetched detailed activity for ID {activity_id}")
+                    break
+                except Exception as e:
+                    logger.error(f"Error fetching detailed activity for ID {activity_id}: {e}")
+                    if attempt < retry_count - 1:
+                        logger.info(f"Retrying... ({attempt + 1}/{retry_count})")
+                    else:
+                        logger.error(f"Failed to fetch detailed activity for ID {activity_id} after {retry_count} attempts")
+                        detailed_activity = None
+            if detailed_activity is None:
+                continue
 
             # Turn detailed activity into a DataFrame
             detailed_activity_df = pd.DataFrame([detailed_activity])
