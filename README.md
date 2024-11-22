@@ -8,11 +8,16 @@ This project analyzes workout data, focusing on activities like running and cycl
 ```
 .
 ├── data
-│   ├── activities.db        # Database for Strava data
+│   ├── activities.db        # Database for Strava activities
 │   ├── gear.db              # Database for gear data
+│   ├── splits.db            # Database for splits data
+│   ├── zones.db             # Database for zones data
 │   └── weather.db           # Database for weather data
 ├── main.py                  # Main entry point for running the analysis
-├── requirements.txt         
+├── notebooks                # Jupyter notebooks for analysis and queries
+│   ├── queries.ipynb        # Notebook for exploring database queries
+│   └── Untitled.ipynb       # Additional notebook for exploratory analysis
+├── requirements.txt         # Python dependencies
 ├── src
 │   ├── clients              # API clients for interacting with external services
 │   │   ├── strava_client.py     # Client for interacting with Strava API
@@ -21,12 +26,14 @@ This project analyzes workout data, focusing on activities like running and cycl
 │   ├── database             # Database interaction code
 │   │   ├── db.py                # SQLite database connection and schema setup
 │   │   └── queries.py           # Common queries for interacting with the databases
-│   ├── models               # Data models for activity, gear, and weather data
+│   ├── models               # Data models for activity, gear, splits, zones, and weather
 │   │   ├── activity.py          # Model and processing for Strava activities
 │   │   ├── gear.py              # Model for gear information
-│   │   ├── processing.py        # Data processing utilities (unit conversions, renaming, etc.)
-│   │   └── weather.py           # Model for weather data
-│   │ utils.py                # Utility functions used throughout the project
+│   │   ├── split.py             # Model for split data
+│   │   ├── zones.py             # Model for zones data
+│   │   ├── weather.py           # Model for weather data
+│   │   └── processing.py        # Data processing utilities (unit conversions, renaming, etc.)
+│   └── utils.py   
 ```
 
 ## Setup
