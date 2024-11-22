@@ -40,7 +40,7 @@ class StravaClient:
             self.access_token = data["access_token"]
             self.refresh_token = data["refresh_token"]
             self.expires_at = data["expires_at"]
-            logger.debug("Access token refreshed successfully.")
+            logger.info("Access token refreshed successfully.")
 
         else:
             logger.error(f"Failed to refresh token: {e}")
@@ -60,7 +60,7 @@ class StravaClient:
             else:
                 raise ValueError(f"HTTP method {method} not supported.")
 
-            response.raise_for_status()  # Raise an error for bad status codes
+            response.raise_for_status()  
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Request to {endpoint} failed: {e}")
