@@ -37,6 +37,7 @@ def create_activities_table():
         """
         CREATE TABLE IF NOT EXISTS activities (
                    id INTEGER PRIMARY KEY,
+                   name TEXT,
                    date TEXT,
                    month TEXT,
                    day_of_week TEXT,
@@ -178,14 +179,15 @@ def insert_activity(activity):
         # Insert the activity
         cursor.execute(
             """
-            INSERT INTO activities (id, date, month, day_of_week, start_time, end_time, 
+            INSERT INTO activities (id, name, date, month, day_of_week, start_time, end_time, 
                 sport_type, indoor, distance, duration, elevation_gain, 
                 gear_id, average_heartrate, average_speed, average_cadence, 
                 average_temp, average_watts, intensity, lat_lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 activity.activity_id,
+                activity.name,
                 activity.date,
                 activity.month,
                 activity.day_of_week,
@@ -405,8 +407,7 @@ def insert_zone(row):
                 row["time_in_zone"],
             ),
         )
-    else:
-        logger.info(f"Zone data for Activity ID {row['activity_id']} already exists in the database.")
+
 
     conn.commit()
     conn.close()

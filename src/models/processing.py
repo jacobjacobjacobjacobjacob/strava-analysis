@@ -68,12 +68,14 @@ def split_datetime_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def replace_lat_lng_values(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Converts lat_lng column lists to comma-separated strings or "" if empty.
+    Converts lat_lng column lists to comma-separated strings, replaces "0, 0" with a valid default value.
     """
-    # Ensure lat_lng is always a string
+    # Ensure lat_lng is always a string and replace invalid values
     df["lat_lng"] = df["lat_lng"].apply(
         lambda x: (
-            ", ".join(map(str, x)) if isinstance(x, list) and len(x) > 0 else "0, 0"
+            "63.43715, 10.435918"  # Default value
+            if (isinstance(x, list) and len(x) == 0) or x == "0, 0"
+            else ", ".join(map(str, x)) if isinstance(x, list) else x
         )
     )
     return df
@@ -84,53 +86,6 @@ def extract_splits_data(df: pd.DataFrame) -> pd.DataFrame:
     return filtered_df
 
 
-def explode_column(detailed_df_raw, column):
-    """Explodes a column of dictionaries into separate columns."""
-
-    # Extract the column
-    metric_raw = detailed_df_raw[column]
-    # Ensure all rows are valid lists (convert strings to actual Python lists if necessary)
-    metric_cleaned = metric_raw.apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
-    )
-    # Drop rows with NaN or invalid values
-    metric_cleaned = metric_cleaned.dropna()
-    
-    # Explode the list of dictionaries into individual rows
-    metric_exploded = metric_cleaned.explode()
-   
-    # Normalize the dictionary entries into columns
-    metric_df = pd.json_normalize(metric_exploded)
-
-    return metric_df
-
-# def clean_splits_data(df: pd.DataFrame) -> pd.DataFrame:
-#     # Rename columns
-#     splits_rename_mapping = {
-#     "moving_time": "duration",
-#     "average_grade_adjusted_speed": "average_gap"
-#     }
-#     df = df.rename(columns=splits_rename_mapping)
-    
-#     # Map pace zones
-#     df["pace_zone"] = df["pace_zone"].map(PACE_ZONES)
-    
-#     # Drop unnecessary columns
-#     df = df.drop(columns="elapsed_time")
-    
-#     # Convert duration from seconds to minutes
-#     df["duration"] = df["duration"] / 60
-    
-#     # Convert speeds from m/s to km/h
-#     speed_columns = ["average_speed", "average_gap"]
-#     df[speed_columns] = df[speed_columns] * 3.6
-    
-#     # Round specific columns
-#     columns_to_round = ["duration", "average_speed", "average_gap", "average_heartrate"]
-#     df[columns_to_round] = df[columns_to_round].round(1)
-    
-#     return df
-
 
 def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -139,6 +94,7 @@ def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Input must be a pandas DataFrame.")
     df = df[df["sport_type"].isin(["Ride", "Run"])]
+
 
     try:
         processed_df = (
@@ -154,7 +110,9 @@ def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
 
     return processed_df[
         [
+            
             "id",
+            "name",
             "date",
             "month",
             "day_of_week",

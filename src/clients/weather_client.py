@@ -65,6 +65,7 @@ class WeatherClient:
     def fetch_weather_data(self, row, base_url):
         try:
             lat, lng = row["lat_lng"].split(", ")
+         
         except ValueError:
             logger.warning(
                 f"Invalid lat_lng format in row {row.name}: {row['lat_lng']}"

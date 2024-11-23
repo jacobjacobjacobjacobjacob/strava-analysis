@@ -56,9 +56,13 @@ def main():
     create_zones_table()
 
     # Fetch activities
+ 
     activities = strava_client.get_activities()
+
     activities_df = pd.DataFrame(activities)
+
     activities_df = process_activity_data(activities_df)
+
 
     # Insert new activities into the database and get their IDs
     new_activity_ids = Activity.process_activities(activities_df)
@@ -80,6 +84,7 @@ def main():
         weather_client = WeatherClient(activities_missing_weather.copy())
         try:
             weather_df = weather_client.get_weather_data()
+       
         except Exception as e:
             logger.error(f"Error fetching weather data: {e}")
             weather_df = pd.DataFrame()  # Empty weather DataFrame if there's an error
@@ -141,4 +146,4 @@ def main():
 
 if __name__ == "__main__":
     activities_df, weather_df = main()
-
+   

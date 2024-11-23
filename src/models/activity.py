@@ -3,6 +3,7 @@ class Activity:
     def __init__(
         self,
         activity_id,
+        name,
         date,
         month,
         day_of_week,
@@ -23,6 +24,7 @@ class Activity:
         lat_lng
     ):
         self.activity_id = activity_id
+        self.name = name
         self.date = date
         self.month = month
         self.day_of_week = day_of_week
@@ -44,7 +46,7 @@ class Activity:
 
     def __repr__(self):
         return (
-            f"Activity(activity_id={self.activity_id}, date='{self.date}', month='{self.month}', "
+            f"Activity(activity_id={self.activity_id}, name='{self.name}', date='{self.date}', month='{self.month}', "
             f"day_of_week='{self.day_of_week}', start_time='{self.start_time}', end_time='{self.end_time}', "
             f"sport_type='{self.sport_type}', indoor={self.indoor}, distance={self.distance}, "
             f"duration={self.duration}, elevation_gain={self.elevation_gain}, gear_id='{self.gear_id}', "
@@ -56,7 +58,6 @@ class Activity:
     def save_to_db(self):
         """Method to save activities to the database."""
         from src.database.db import insert_activity
-
         return insert_activity(self)
 
     @classmethod
@@ -64,10 +65,12 @@ class Activity:
         """Process and save activities from a DataFrame to the database."""
         new_activity_ids = []
 
+
         for index, row in activities_df.iterrows():
             # Create an Activity instance from the row
             activity = cls(
                 activity_id=row["id"],
+                name=row["name"],
                 date=row["date"],
                 month=row["month"],
                 day_of_week=row["day_of_week"],
@@ -87,8 +90,9 @@ class Activity:
                 intensity=row["intensity"],
                 lat_lng=row["lat_lng"],
             )
-            # Save the Activity instance to the database
-            # activity.save_to_db()
+            
+            
+     
             if activity.save_to_db():  
                 new_activity_ids.append(activity.activity_id)
 
