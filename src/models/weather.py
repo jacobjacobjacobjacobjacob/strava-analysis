@@ -1,4 +1,5 @@
 # src/models/weather.py
+from loguru import logger
 class Weather:
     def __init__(
         self,
@@ -51,3 +52,4 @@ class Weather:
             )
             # Save the Weather instance to the database
             weather.save_to_db()
+    

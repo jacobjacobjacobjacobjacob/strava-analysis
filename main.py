@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from src.clients.strava_client import StravaClient
 from src.clients.weather_client import WeatherClient
+from src.clients.streams_client import StreamClient
 from src.models.processing import process_activity_data, process_weather_data, extract_splits_data
 from src.models.activity import Activity
 from src.models.weather import Weather
@@ -23,7 +24,6 @@ from src.database.db import (
     create_zones_table,
 )
 from src.database.queries import extract_and_compare_ids
-
 
 def main():
     """
@@ -145,5 +145,19 @@ def main():
     
 
 if __name__ == "__main__":
-    activities_df, weather_df = main()
-   
+    # activities_df, weather_df = main()
+    from database.queries import compare_ids_and_output, fetch_all_ids, fetch_activity_ids_not_in_streams
+    from database.db import insert_stream_to_db
+    
+    # compare_ids_and_output()
+
+    # load_dotenv()
+    # strava_client = StravaClient(
+    #     client_id=os.getenv("STRAVA_CLIENT_ID"),
+    #     client_secret=os.getenv("STRAVA_CLIENT_SECRET"),
+    #     refresh_token=os.getenv("STRAVA_REFRESH_TOKEN"),
+    #     athlete_id=os.getenv("STRAVA_ATHLETE_ID"),
+    # )
+
+    # streams_client = StreamClient(strava_client)
+    

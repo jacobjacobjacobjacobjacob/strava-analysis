@@ -1,7 +1,7 @@
 # src/clients/strava_client.py
 import requests
 from loguru import logger
-from src.clients.streams import StreamClient
+from clients.streams_client import StreamClient
 from src.utils import timer
 
 

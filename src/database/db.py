@@ -30,6 +30,9 @@ def connect_splits_db():
 def connect_zones_db():
     return connect_db("zones.db")
 
+def connect_streams_db():
+    return connect_db("streams.db")
+
 def create_activities_table():
     conn = connect_activities_db()
     cursor = conn.cursor()
@@ -161,6 +164,23 @@ def create_zones_table():
             max_value INTEGER,
             time_in_zone REAL,
             PRIMARY KEY (activity_id, zone_type, min_value, max_value)
+        )
+        """
+    )
+    conn.commit()
+    conn.close()
+
+def create_streams_table():
+    """
+    Create the streams table in the streams.db database.
+    """
+    conn = connect_streams_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS streams (
+            activity_id INTEGER PRIMARY KEY,
+            streams TEXT
         )
         """
     )
@@ -408,6 +428,43 @@ def insert_zone(row):
             ),
         )
 
+
+    conn.commit()
+    conn.close()
+
+
+def insert_stream_to_db(activity_id, streams_data):
+    """
+    Insert the stream data into the streams table in the database.
+
+    Args:
+        activity_id (int): The activity ID.
+        streams_data (dict): The stream data to be inserted.
+    """
+    conn = connect_streams_db()
+    cursor = conn.cursor()
+
+    # Ensure the streams data is serialized as JSON
+    streams_json = json.dumps(streams_data)
+
+    # Create the streams table if it doesn't exist
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS streams (
+            activity_id INTEGER PRIMARY KEY,
+            streams TEXT
+        )
+        """
+    )
+
+    # Insert the data, ignoring if it already exists
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO streams (activity_id, streams)
+        VALUES (?, ?)
+        """,
+        (activity_id, streams_json),
+    )
 
     conn.commit()
     conn.close()

@@ -47,6 +47,9 @@ class StreamClient:
 
     def get_cadence_stream(self, activity_id):
         return self._get_streams(activity_id, ["cadence"])
+    
+    def get_pace_stream(self, activity_id):
+        return self._get_streams(activity_id, ["pace"])
 
     def get_speed_stream(self, activity_id):
         return self._get_streams(activity_id, ["velocity_smooth"])
