@@ -15,6 +15,19 @@ def timer(func):
 
     return wrapper
 
+def fetch_detailed_activity_with_retries(strava_client, activity_id, retries=3):
+    for attempt in range(retries):
+        try:
+            detailed_activity = strava_client.get_detailed_activity(activity_id)
+            logger.debug(f"Fetched detailed activity for ID {activity_id}")
+            return detailed_activity
+        except Exception as e:
+            logger.error(f"Error fetching detailed activity for ID {activity_id}: {e}")
+            if attempt < retries - 1:
+                logger.info(f"Retrying... ({attempt + 1}/{retries})")
+            else:
+                logger.error(f"Failed to fetch detailed activity for ID {activity_id} after {retries} attempts")
+    return None
 
 def map_months(df: pd.DataFrame):
     df["month"] = df["month"].map(MONTH_MAPPING)
@@ -99,3 +112,17 @@ PACE_ZONES_MAPPING = {
     5: "Z5 - VO2 Max",
     6: "Z6 - Anaerobic"
 }
+
+VALID_STREAM_TYPES = [
+            "time",
+            "distance",
+            "latlng",
+            "altitude",
+            "velocity_smooth",
+            "heartrate",
+            "cadence",
+            "watts",
+            "temp",
+            "moving",
+            "grade_smooth",
+        ]

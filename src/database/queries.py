@@ -93,7 +93,7 @@ def extract_and_compare_ids():
         conn_weather.close()
 
     if len(diff_ids) == 0:
-        logger.info("All activity IDs are present in the weather database.")
+        logger.info("All activity IDs are present.")
 
     else:
         logger.info(

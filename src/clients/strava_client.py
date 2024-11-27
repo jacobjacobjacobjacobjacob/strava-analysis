@@ -2,7 +2,7 @@
 import requests
 from loguru import logger
 from clients.streams_client import StreamClient
-from src.utils import timer
+from src.utils import timer, VALID_STREAM_TYPES
 
 
 class StravaClient:
@@ -60,7 +60,7 @@ class StravaClient:
             else:
                 raise ValueError(f"HTTP method {method} not supported.")
 
-            response.raise_for_status()  
+            response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Request to {endpoint} failed: {e}")
@@ -90,3 +90,19 @@ class StravaClient:
     def get_gear_details(self, gear_id):
         """Fetch details of a specific gear item by ID."""
         return self.make_request(f"gear/{gear_id}")
+
+    def get_activity_available_streams(self, activity_id, possible_streams=None):
+        """Get the available stream types for a specific activity."""
+        params = {"keys": ",".join(VALID_STREAM_TYPES), "key_by_type": True}
+        endpoint = f"activities/{activity_id}/streams"
+
+        response = self.make_request(endpoint, params=params)
+        if response:
+            available_streams = list(response.keys())
+            logger.info(
+                f"Available streams for activity {activity_id}: {available_streams}"
+            )
+            return available_streams
+        else:
+            logger.error(f"Failed to retrieve streams for activity {activity_id}")
+            return []

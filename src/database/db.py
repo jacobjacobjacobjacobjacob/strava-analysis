@@ -180,7 +180,14 @@ def create_streams_table():
         """
         CREATE TABLE IF NOT EXISTS streams (
             activity_id INTEGER PRIMARY KEY,
-            streams TEXT
+            time INTEGER,
+            distance REAL,
+            latlng TEXT,
+            altitude REAL,
+            velocity_smooth REAL,
+            heartrate INTEGER,
+            moving BOOLEAN,
+            grade_smooth REAL
         )
         """
     )
@@ -433,38 +440,78 @@ def insert_zone(row):
     conn.close()
 
 
-def insert_stream_to_db(activity_id, streams_data):
-    """
-    Insert the stream data into the streams table in the database.
+# def insert_stream_to_db(activity_id, streams_data):
+#     """
+#     Insert the stream data into the streams table in the database.
 
-    Args:
-        activity_id (int): The activity ID.
-        streams_data (dict): The stream data to be inserted.
+#     Args:
+#         activity_id (int): The activity ID.
+#         streams_data (dict): The stream data to be inserted.
+#     """
+#     conn = connect_streams_db()
+#     cursor = conn.cursor()
+
+#     # Ensure the streams data is serialized as JSON
+#     streams_json = json.dumps(streams_data)
+
+#     # Create the streams table if it doesn't exist
+#     cursor.execute(
+#         """
+#         CREATE TABLE IF NOT EXISTS streams (
+#             activity_id INTEGER PRIMARY KEY,
+#             streams TEXT
+#         )
+#         """
+#     )
+
+#     # Insert the data, ignoring if it already exists
+#     cursor.execute(
+#         """
+#         INSERT OR REPLACE INTO streams (activity_id, streams)
+#         VALUES (?, ?)
+#         """,
+#         (activity_id, streams_json),
+
+def insert_streams(streams_df):
     """
+    Batch insert streams into the streams table.
+    
+    :param streams_df: A pandas DataFrame containing the stream data for an activity.
+    """
+    import json
     conn = connect_streams_db()
     cursor = conn.cursor()
 
-    # Ensure the streams data is serialized as JSON
-    streams_json = json.dumps(streams_data)
-
-    # Create the streams table if it doesn't exist
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS streams (
-            activity_id INTEGER PRIMARY KEY,
-            streams TEXT
+    # Prepare the data for insertion
+    records = streams_df.to_dict(orient="records")  # Convert DataFrame rows to dictionaries
+    stream_data = [
+        (
+            int(record["activity_id"]),  # Ensure activity_id is an integer
+            json.dumps(record["time"]) if record["time"] is not None else None,
+            json.dumps(record["distance"]) if record["distance"] is not None else None,
+            json.dumps(record["latlng"]) if record["latlng"] is not None else None,
+            json.dumps(record["altitude"]) if record["altitude"] is not None else None,
+            json.dumps(record["velocity_smooth"]) if record["velocity_smooth"] is not None else None,
+            json.dumps(record["heartrate"]) if record["heartrate"] is not None else None,
+            json.dumps(record["moving"]) if record["moving"] is not None else None,
+            json.dumps(record["grade_smooth"]) if record["grade_smooth"] is not None else None,
         )
-        """
-    )
+        for record in records
+    ]
 
-    # Insert the data, ignoring if it already exists
-    cursor.execute(
+    # Insert data in a single batch operation
+    cursor.executemany(
         """
-        INSERT OR REPLACE INTO streams (activity_id, streams)
-        VALUES (?, ?)
+        INSERT INTO streams (
+            activity_id, time, distance, latlng, altitude, 
+            velocity_smooth, heartrate, moving, grade_smooth
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (activity_id, streams_json),
+        stream_data,
     )
 
     conn.commit()
     conn.close()
+    logger.info(f"Inserted {len(stream_data)} stream rows into the database.")
+
