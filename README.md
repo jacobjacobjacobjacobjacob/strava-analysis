@@ -14,9 +14,6 @@ This project analyzes workout data, focusing on activities like running and cycl
 │   ├── zones.db             # Database for zones data
 │   └── weather.db           # Database for weather data
 ├── main.py                  # Main entry point for running the analysis
-├── notebooks                # Jupyter notebooks for analysis and queries
-│   ├── queries.ipynb        # Notebook for exploring database queries
-│   └── Untitled.ipynb       # Additional notebook for exploratory analysis
 ├── requirements.txt         # Python dependencies
 ├── src
 │   ├── clients              # API clients for interacting with external services
