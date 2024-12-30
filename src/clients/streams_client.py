@@ -117,5 +117,5 @@ class StreamClient:
             if stream_type in response
         }
 
-        logger.info(f"Available streams for activity {activity_id}: {list(available_streams.keys())}")
+        # logger.info(f"Available streams for activity {activity_id}: {list(available_streams.keys())}")
         return available_streams

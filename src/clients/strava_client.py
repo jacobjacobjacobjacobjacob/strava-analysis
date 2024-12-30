@@ -2,7 +2,7 @@
 import requests
 from loguru import logger
 from clients.streams_client import StreamClient
-from src.utils import timer, VALID_STREAM_TYPES
+from src.utils import VALID_STREAM_TYPES
 
 
 class StravaClient:
@@ -65,7 +65,7 @@ class StravaClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"Request to {endpoint} failed: {e}")
 
-    @timer
+  
     def get_activities(self, per_page=200):
         """Fetch the athlete's activities."""
         params = {"per_page": per_page}
