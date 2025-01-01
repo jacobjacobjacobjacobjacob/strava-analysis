@@ -33,6 +33,9 @@ def connect_zones_db():
 def connect_streams_db():
     return connect_db("streams.db")
 
+def connect_best_efforts_db():
+    return connect_db("best_efforts.db")
+
 def create_activities_table():
     conn = connect_activities_db()
     cursor = conn.cursor()
@@ -62,6 +65,20 @@ def create_activities_table():
 
                    )            
     """
+    )
+    conn.commit()
+    conn.close()
+
+def create_best_efforts_table():
+    conn = connect_best_efforts_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS best_efforts (
+            activity_id INTEGER PRIMARY KEY,
+            best_efforts TEXT
+        )            
+        """
     )
     conn.commit()
     conn.close()
@@ -515,3 +532,29 @@ def insert_streams(streams_df):
     conn.close()
     logger.info(f"Inserted {len(stream_data)} stream rows into the database.")
 
+def insert_best_effort(detailed_activity):
+    # Check if 'best_efforts' is present
+    best_efforts = detailed_activity.get("best_efforts", [])
+    
+    if best_efforts:
+        # Get the activity ID from the first item in the 'best_efforts' list
+        activity_id = best_efforts[0]["activity"]["id"]
+        
+        # Convert the list of best_efforts to a JSON string
+        best_efforts_json = json.dumps(best_efforts)  # Convert list of dicts to JSON string
+        
+        # Insert into the database
+        create_best_efforts_table()
+        conn = connect_best_efforts_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO best_efforts (activity_id, best_efforts) 
+            VALUES (?, ?)
+        ''', (activity_id, best_efforts_json))
+        
+        conn.commit()
+        conn.close()
+        logger.info(f"Inserted best efforts for {activity_id} to the database.")
+    else:
+        logger.warning("No 'best_efforts' found in the detailed_activity.")

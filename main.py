@@ -29,8 +29,36 @@ from src.database.db import (
     create_zones_table,
     create_streams_table,
     insert_streams,
+    insert_best_effort,
 )
-from src.database.queries import extract_and_compare_ids
+from src.database.queries import (
+    extract_and_compare_ids,
+    get_outdoor_run_ids,
+    get_best_effort_activity_ids,
+)
+
+
+""" FIX THIS LATER """
+
+
+def update_best_efforts():
+    """Cross-check if all outdoor run IDs are present in best_efforts.db."""
+    outdoor_run_ids = get_outdoor_run_ids()
+    best_effort_activity_ids = get_best_effort_activity_ids()
+
+    # Find missing outdoor run IDs in the best_efforts table
+    missing_ids = [
+        activity_id
+        for activity_id in outdoor_run_ids
+        if activity_id not in best_effort_activity_ids
+    ]
+
+    # Output the missing IDs
+    if missing_ids:
+        logger.info(f"Fetching best efforts for {len(missing_ids)} missing activities.")
+        for activity_id in missing_ids:
+            detailed_activity = strava_client.get_detailed_activity(activity_id)
+            insert_best_effort(detailed_activity)
 
 
 def main():
@@ -88,6 +116,27 @@ def main():
         weather_df = pd.DataFrame()  # Empty weather DataFrame if no missing data
 
     if new_activity_ids:
+
+        # Fetch best efforts
+        outdoor_run_ids = get_outdoor_run_ids()
+        best_effort_activity_ids = get_best_effort_activity_ids()
+
+        # Find missing outdoor run IDs in the best_efforts table
+        missing_ids = [
+            activity_id
+            for activity_id in outdoor_run_ids
+            if activity_id not in best_effort_activity_ids
+        ]
+
+        # Output the missing IDs
+        if missing_ids:
+            logger.info(
+                f"Fetching best efforts for {len(missing_ids)} missing activities."
+            )
+            for activity_id in missing_ids:
+                detailed_activity = strava_client.get_detailed_activity(activity_id)
+                insert_best_effort(detailed_activity)
+
         # Get unique gear IDs and process them
         gear_list = activities_df["gear_id"].dropna().unique().tolist()
         Gear.process_gears(strava_client, gear_list)
@@ -103,7 +152,7 @@ def main():
 
             # Splits
             splits_df = extract_splits_data(detailed_activity_df)
-            
+
             logger.debug(f"Extracted splits DataFrame for activity ID {activity_id}.")
             Split.process_splits(splits_df)
 
@@ -117,11 +166,6 @@ def main():
                 Zones.process_zones(zones_df)
             else:
                 logger.info(f"No zones data for activity {activity_id}")
-
-            # Streams
-            # streams = stream_client.get_all_streams(activity_id=12992452963)
-            # stream_instance = Streams(activity_id, streams)
-            # streams_df = stream_instance.parse_streams_to_dataframe_compact(activity_id, streams)
 
             try:
                 # Fetch all streams for the activity

@@ -229,33 +229,29 @@ def fetch_activity_ids_not_in_streams():
         conn_streams.close()
 
 
-def process_activities_in_batches(activity_ids, batch_size=50, wait_time=900):
 
-        """
-        Process activities in batches.
+def get_outdoor_run_ids(db_path="data/activities.db"):
+    """Retrieve activity IDs where sport_type is 'Run' and indoor is 0."""
+    conn = sqlite3.connect(db_path)
+    query = """
+        SELECT id 
+        FROM activities 
+        WHERE sport_type = "Run" AND indoor = 0
+    """
+    cursor = conn.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()  # Get all rows
+    conn.close()
+    
+    # Extract the ids from the result and return as a list
+    return [row[0] for row in result]
 
-        Args:
-            activity_ids (list): List of activity IDs to process.
-            batch_size (int): Number of activities to process in each batch. Default is 60.
-            wait_time (int): Time to wait between batches, in seconds. Default is 900 (15 minutes).
-        """
-        total_activities = len(activity_ids)
-        for start_idx in range(0, total_activities, batch_size):
-            # Get the current batch
-            batch = activity_ids[start_idx:start_idx + batch_size]
-            logger.info(f"Processing batch {start_idx // batch_size + 1} of {len(activity_ids) // batch_size + 1}...")
-            
-            # Process each activity in the batch
-            for activity_id in batch:
-                try:
-                    # Fetch heartrate stream data
-                    stream_data = streams_client.get_heartrate_stream(activity_id)
-                    insert_stream_to_db(activity_id, stream_data)
-                    logger.info(f"Inserted streams data for activity ID {activity_id}")
-                except Exception as e:
-                    logger.error(f"Error processing activity ID {activity_id}: {e}")
-
-            # Wait before processing the next batch (if not the last batch)
-            if start_idx + batch_size < total_activities:
-                logger.info(f"Batch complete. Waiting {wait_time // 60} minutes before next batch...")
-                time.sleep(wait_time)
+def get_best_effort_activity_ids(db_path="data/best_efforts.db"):
+    """Retrieve all activity IDs present in the best_efforts table."""
+    conn = sqlite3.connect(db_path)
+    query = "SELECT activity_id FROM best_efforts"
+    cursor = conn.cursor()
+    cursor.execute(query)
+    best_effort_activity_ids = [row[0] for row in cursor.fetchall()]  
+    conn.close()
+    return best_effort_activity_ids
