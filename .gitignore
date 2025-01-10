@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 *.csv
 src/analysis.py
+
+src/api/weather_api.py
+src/models/weather.py

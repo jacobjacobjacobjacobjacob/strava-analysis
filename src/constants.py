@@ -1,7 +1,4 @@
 # src/constants.py
-import os
-
-
 DEFAULT_COORDINATES = "63.43715, 10.435918"
 
 PACE_ZONES_MAPPING = {
