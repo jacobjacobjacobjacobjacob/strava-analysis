@@ -1,0 +1,11 @@
+.env
+.venv
+.vscode
+*.DS_Store
+*.ipynb
+venv/
+*.db
+__pycache__/
+*.pyc
+*.csv
+src/analysis.py
