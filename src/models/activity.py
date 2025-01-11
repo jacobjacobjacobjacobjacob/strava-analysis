@@ -116,6 +116,12 @@ class Activity:
             )
         )
         return df
+    
+    @staticmethod
+    def filter_sport_types(df: pd.DataFrame, sport_types: list = ["Ride", "Run"]) -> pd.DataFrame:
+        logger.info(f"Filtered data by {sport_types}")
+        return df[df["sport_type"].isin(sport_types)]
+        
 
     @staticmethod
     def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -130,9 +136,9 @@ class Activity:
             raise ValueError("DataFrame is empty.")
 
         try:
-            df = df[df["sport_type"].isin(["Ride", "Run"])]
             processed_df = (
                 df.pipe(Activity.rename_columns)
+                .pipe(Activity.filter_sport_types)
                 .pipe(Activity.convert_units)
                 .pipe(Activity.split_datetime_columns)
                 .pipe(Activity.replace_lat_lng_values)
