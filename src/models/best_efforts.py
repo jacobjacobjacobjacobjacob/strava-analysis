@@ -1,6 +1,7 @@
 # src/models/best_efforts.py
 import pandas as pd
 import json
+from loguru import logger
 
 
 class BestEfforts:
@@ -25,6 +26,51 @@ class BestEfforts:
             f"BestEffort(id={self.id}, date='{self.date}', name='{self.name}', "
             f"distance={self.distance}, time={self.time}, pr_rank={self.pr_rank})"
         )
+    
+    @staticmethod
+    def calculate_kph(distance_meters, time_seconds):
+        """Calculate the speed in kilometers per hour."""
+        if time_seconds == 0:  # Avoid division by zero
+            return 0
+        return (distance_meters / 1000) / (time_seconds / 3600)
+
+    @staticmethod
+    def format_kph_to_pace(kph):
+        """Convert speed (kph) to pace (time per km)."""
+        if kph == 0:
+            return "N/A"
+        pace_minutes = 60 / kph
+        pace_seconds = (pace_minutes - int(pace_minutes)) * 60
+        return f"{int(pace_minutes)}:{int(pace_seconds):02d} min/km"
+    
+    @staticmethod
+    def convert_seconds_to_hms(time_seconds):
+        """Convert seconds to HH:MM:SS format."""
+        hours, remainder = divmod(time_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+    
+    @staticmethod
+    def check_new_personal_bests(df: pd.DataFrame) -> None:
+        if df.empty:
+            return
+        # Filter rows where `pr_rank` is 1
+        new_personal_bests = df[df["pr_rank"] == 1]
+
+        # Iterate through each personal best
+        for _, row in new_personal_bests.iterrows():
+            distance = row["name"]
+            time_seconds = row["time"]
+
+            # Calculate time and pace
+            time_hms = BestEfforts.convert_seconds_to_hms(time_seconds)
+            kph = BestEfforts.calculate_kph(row["distance"], time_seconds)
+            pace = BestEfforts.format_kph_to_pace(kph)
+
+            # Log the success message
+            logger.success(
+                f"New Personal Best on the {distance} - {time_hms} @ {pace})!"
+            )
 
     @staticmethod
     def process_best_efforts(activity_id: int, best_efforts_list: list) -> pd.DataFrame:
@@ -50,5 +96,8 @@ class BestEfforts:
 
         # Convert the list of dictionaries to a DataFrame
         best_efforts_df = pd.DataFrame(best_efforts)
+
+        # Check for new best efforts
+        BestEfforts.check_new_personal_bests(best_efforts_df)
   
         return best_efforts_df
