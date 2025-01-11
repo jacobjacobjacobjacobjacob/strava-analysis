@@ -37,9 +37,11 @@ def main():
         if new_activity_ids:
             # Insert new activities into the database
             db_manager.insert_dataframe_to_db(df=new_activities_df, table_name="activities")
-
+            
             # Process each new activity in detail
             process_new_activities(new_activity_ids)
+        else:
+            logger.info("No new activities.")
 
     except Exception as e:
         logger.error(f"Error during main processing: {e}")
@@ -52,6 +54,7 @@ def process_new_activities(new_activity_ids):
     for activity_id in new_activity_ids:
         try:
             logger.debug(f"Processing activity {activity_id}")
+            db_manager.update_cache(activity_id)
             detailed_activity = strava_client.get_detailed_activity(activity_id)
 
             if not detailed_activity:
@@ -73,7 +76,6 @@ def process_individual_activity(activity_id, detailed_activity):
         zones_df = Zones.process_zones(zones_data, activity_id)
         best_efforts_data = detailed_activity.get("best_efforts", [])
         best_efforts_df = BestEfforts.process_best_efforts(activity_id, best_efforts_data)
-
         # Insert processed data into the database
         db_manager.insert_dataframe_to_db(df=splits_df, table_name="splits")
         db_manager.insert_dataframe_to_db(df=zones_df, table_name="zones")
@@ -93,29 +95,3 @@ if __name__ == "__main__":
     main()
 
     
-
-
-    lat = "52.52"
-    lng = "13.41"
-    date = "2025-01-01"
-    # weather = weather_client.get_weather_data(activity_id=13263470530)
-
-    import json
-
-    # print(json.dumps(weather, indent=4))
-    # print(weather)
-
-    # Fetch row from db with params
-    # from src.queries import get_weather_params
-
-    # print("ID:")
-    # print(id)
-
-    # print("DATE:")
-    # print(date)
-
-    # print("LAT_LNG:")
-    # print(lat_lng)
-
-    # print("TIME:")
-    # print(time)
