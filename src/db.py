@@ -94,9 +94,9 @@ class DatabaseManager:
         if len(missing_cache) != 0:
             logger.warning(f"{len(missing_cache)} activities are not present in cache.")
         else:
-            logger.info("Zones, Splits and Cache is up to date.")
+            return
 
-    
+
     def get_row_count(self, table_name: str) -> int:
         """Fetches the count of rows in the specified table"""
         row_count = self.execute_query(GET_ROW_COUNT.format(table_name=table_name))
