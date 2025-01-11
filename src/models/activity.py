@@ -124,11 +124,13 @@ class Activity:
         """
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Input must be a pandas DataFrame.")
+        
 
         if df.empty:
             raise ValueError("DataFrame is empty.")
 
         try:
+            df = df[df["sport_type"].isin(["Ride", "Run"])]
             processed_df = (
                 df.pipe(Activity.rename_columns)
                 .pipe(Activity.convert_units)
