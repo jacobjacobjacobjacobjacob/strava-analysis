@@ -20,7 +20,7 @@ class StravaClient:
         self.refresh_token = refresh_token
         self.access_token = access_token
         self.athlete_id = athlete_id
-        logger.success(f"Initializing StravaClient for athlete {athlete_id}")
+        logger.info(f"Initializing StravaClient for athlete {athlete_id}")
 
         if self.access_token is None:
             self.refresh_access_token()
@@ -139,7 +139,7 @@ class StravaClient:
         short_limit, daily_limit = 100, 1000
         short_usage, daily_usage = map(int, usage)
 
-        logger.trace(
+        logger.info(
             f"Rate limit: {short_usage}/{short_limit} (15-min), {daily_usage}/{daily_limit} (daily)"
         )
 
