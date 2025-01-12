@@ -8,6 +8,7 @@ ALLOWED_TABLES = [
     "splits",
     "zones",
     "cache",
+    "streams",
 ]
 INSERT_ID_TO_CACHE = """
         INSERT OR REPLACE INTO cache (id)
@@ -80,8 +81,8 @@ CREATE_ALL_TABLES = {
                     sport_type TEXT,
                     splits_metric TEXT,
                     laps TEXT,
-                    available_zones TEXT
-                )
+                    available_zones TEXT)
+                
             """,
     "zones": """
                 CREATE TABLE IF NOT EXISTS zones (
@@ -93,11 +94,25 @@ CREATE_ALL_TABLES = {
                     PRIMARY KEY (id, zone_type, min_value, max_value)
                 )
             """,
+    "streams": """
+                CREATE TABLE IF NOT EXISTS streams (
+                    id INTEGER PRIMARY KEY,
+                    time TEXT,
+                    distance TEXT,
+                    latlng TEXT,
+                    altitude TEXT,
+                    speed TEXT,
+                    heartrate TEXT,
+                    cadence TEXT,
+                    watts TEXT
+                )
+            """,
     "cache": """
                 CREATE TABLE IF NOT EXISTS cache (
                     id INTEGER PRIMARY KEY
                 )
             """,
+
 }
 
 GET_WEATHER_PARAMS = "SELECT date, lat_lng FROM activities WHERE id = ?;"
@@ -112,6 +127,7 @@ CLEAR_CACHE = "DELETE FROM cache;"
 
 GET_ROW_COUNT = "SELECT COUNT(*) FROM {table_name}"
 
-GET_ALL_ACTIVITY_IDS = "SELECT id FROM activities;"
-GET_MISSING_ZONES = "SELECT id FROM zones;"
-GET_MISSING_SPLITS = "SELECT id FROM splits;"
+GET_ACTIVITIES_IDS = "SELECT id FROM activities;"
+GET_ZONES_IDS = "SELECT id FROM zones;"
+GET_SPLITS_IDS = "SELECT id FROM splits;"
+GET_STREAMS_IDS = "SELECT id FROM streams;"
