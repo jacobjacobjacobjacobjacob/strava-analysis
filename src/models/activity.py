@@ -121,7 +121,15 @@ class Activity:
     def filter_sport_types(df: pd.DataFrame, sport_types: list = ["Ride", "Run"]) -> pd.DataFrame:
         logger.info(f"Filtered data by {sport_types}")
         return df[df["sport_type"].isin(sport_types)]
+    
+    @staticmethod
+    def fix_virtual_rides(df: pd.DataFrame) -> pd.DataFrame:
+        is_virtual_ride = df["sport_type"] == "VirtualRide"
+        df.loc[is_virtual_ride, "sport_type"] = "Ride"
+        df.loc[is_virtual_ride, "indoor"] = True
         
+        return df
+            
 
     @staticmethod
     def process_activity_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -138,10 +146,11 @@ class Activity:
         try:
             processed_df = (
                 df.pipe(Activity.rename_columns)
-                .pipe(Activity.filter_sport_types)
+                # .pipe(Activity.filter_sport_types)
                 .pipe(Activity.convert_units)
                 .pipe(Activity.split_datetime_columns)
                 .pipe(Activity.replace_lat_lng_values)
+                .pipe(Activity.fix_virtual_rides)
             )
         except Exception as e:
             logger.error(f"Error processing data: {e}")
