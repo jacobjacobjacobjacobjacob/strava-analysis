@@ -13,7 +13,11 @@ from src.queries import (
     CLEAR_CACHE,
     GET_STREAMS_IDS,
     GET_ACTIVITIES_IDS,
+    GET_SPLITS_IDS,
+    GET_ZONES_IDS,
+    GET_BEST_EFFORTS_IDS,
     GET_ROW_COUNT,
+    ADD_WEATHER_DATA,
 )
 from src.config import DATABASE_PATH
 
@@ -65,9 +69,22 @@ class DatabaseManager:
     def get_ids_from_cache(self) -> list:
         """Fetches all IDs from the cache table."""
         return [row[0] for row in self.execute_query(GET_CACHED_IDS)]
+
     def get_ids_from_streams(self) -> list:
         """Fetches all IDs from the cache table."""
         return [row[0] for row in self.execute_query(GET_STREAMS_IDS)]
+
+    def get_ids_from_splits(self) -> list:
+        """Fetches all IDs from the splits table."""
+        return [row[0] for row in self.execute_query(GET_SPLITS_IDS)]
+
+    def get_ids_from_zones(self) -> list:
+        """Fetches all IDs from the zones table."""
+        return [row[0] for row in self.execute_query(GET_ZONES_IDS)]
+
+    def get_ids_from_best_efforts(self) -> list:
+        """Fetches all IDs from the best efforts table."""
+        return [row[0] for row in self.execute_query(GET_BEST_EFFORTS_IDS)]
 
     def get_ids_from_activities(self) -> list:
         """Fetches all IDs from the activities table."""
@@ -76,9 +93,8 @@ class DatabaseManager:
     def check_discrepancies(self) -> None:
         activities_ids = self.get_ids_from_activities()
         cached_ids = self.get_ids_from_cache()
-
         missing_cache = [item for item in activities_ids if item not in cached_ids]
-        print(missing_cache)
+
         if len(missing_cache) != 0:
             logger.warning(f"{len(missing_cache)} activities are not present in cache.")
 
@@ -125,9 +141,10 @@ class DatabaseManager:
         """
         # Validate table name
         self.validate_table(table_name)
+        # logger.debug(f"Inserting to table: {table_name}")
 
         if df is None or df.empty:
-            logger.warning(f"No data to insert into {table_name}. Skipping.")
+            # logger.warning(f"No data to insert into table: {table_name}. Skipping.")
             return
 
         # Prepare columns and placeholders
@@ -139,14 +156,57 @@ class DatabaseManager:
             table_name=table_name, columns=columns, placeholders=placeholders
         )
 
+
         # Convert to list of tuples (records)
         data = df.to_dict(orient="records")
 
         try:
             for row in data:
                 self.execute_query(query, tuple(row.values()))  # Insert each row
-            logger.info(
-                f"{len(df)} rows successfully inserted into the {table_name} table."
-            )
+
+            if len(df) == 1:
+                rows_string = "row"
+            else:
+                rows_string = "rows"
+            # logger.info(
+            #     f"Inserted {len(df)} {rows_string} into the {table_name} table."
+            # )
         except Exception as e:
             logger.error(f"Error inserting data into {table_name}: {e}")
+
+    def add_weather_data(
+        self, activity_id: int, df: pd.DataFrame, query=ADD_WEATHER_DATA
+    ) -> None:
+        """Updates weather data for a specific activity in the database."""
+        if df is None or df.empty:
+            logger.warning(f"No weather data for activity: {activity_id}. Skipping.")
+            return
+
+        weather_data = df.iloc[0]
+        logger.debug("WEATHER DATA RECEIVED:")
+        print(weather_data)
+
+        # Extract weather data from the dataframe
+        temperature = weather_data["temperature"]
+        wind_speed = weather_data["wind_speed"]
+        snow = weather_data["snow"]
+        weather_code = weather_data["weather_code"]
+        rain = weather_data["rain"]
+        precipitation = weather_data["precipitation"]
+
+        logger.debug(f"Snow:{snow}, Wind:{wind_speed}, Temperature:{temperature}")
+
+        # Execute the query to update the weather data in the activities table
+        self.execute_query(
+            query,
+            (
+                temperature,
+                wind_speed,
+                snow,
+                weather_code,
+                rain,
+                precipitation,
+                activity_id,
+            ),
+        )
+        logger.info(f"Weather data updated for activity ID: {activity_id}")
