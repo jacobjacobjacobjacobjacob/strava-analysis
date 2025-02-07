@@ -67,11 +67,11 @@ CREATE_ALL_TABLES = {
                 CREATE TABLE IF NOT EXISTS weather (
                     id INTEGER PRIMARY KEY,
                     date TEXT,
-                    temp REAL,
-                    weather_type TEXT,
+                    temperature REAL,
+                    weather_code TEXT,
                     precipitation REAL,
                     rain REAL,
-                    wind REAL,
+                    wind_speed REAL,
                     snow REAL
                 )
             """,
@@ -112,14 +112,22 @@ CREATE_ALL_TABLES = {
                     id INTEGER PRIMARY KEY
                 )
             """,
-
 }
 
-GET_WEATHER_PARAMS = "SELECT date, lat_lng FROM activities WHERE id = ?;"
+GET_WEATHER_PARAMS = (
+    "SELECT id, date, start_time, lat_lng FROM activities WHERE id = ?;"
+)
+
+ADD_WEATHER_DATA = """
+UPDATE activities
+SET temperature = ?, wind_speed = ?, snow = ?
+WHERE id = ?;
+"""
 
 INSERT_OR_IGNORE_QUERY = (
     "INSERT OR IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})"
 )
+
 
 GET_CACHED_IDS = "SELECT id FROM cache;"
 
@@ -131,3 +139,4 @@ GET_ACTIVITIES_IDS = "SELECT id FROM activities;"
 GET_ZONES_IDS = "SELECT id FROM zones;"
 GET_SPLITS_IDS = "SELECT id FROM splits;"
 GET_STREAMS_IDS = "SELECT id FROM streams;"
+GET_BEST_EFFORTS_IDS = "SELECT id FROM best_efforts;"
