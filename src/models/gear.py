@@ -2,6 +2,7 @@
 import pandas as pd
 
 
+
 class Gear:
     def __init__(
         self,
@@ -31,6 +32,7 @@ class Gear:
         """Fetch gear details"""
         gear_ids = df["gear_id"].dropna().unique().tolist()
 
+
         gear_data = []  # List to hold the gear details
 
         # Collect gear data
@@ -45,7 +47,7 @@ class Gear:
                     gear_details["brand_name"],
                     gear_details["model_name"],
                     gear_details["retired"],
-                    gear_details.get("weight"),  # Avoid KeyError if 'weight' is missing
+                    gear_details.get("weight"),  
                 ]
             )
 
@@ -62,5 +64,5 @@ class Gear:
                 "weight",
             ],
         )
-
+        gear_df["retired"] = gear_df["retired"].astype(int)  # Convert boolean to integer
         return gear_df
