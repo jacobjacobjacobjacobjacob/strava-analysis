@@ -2,7 +2,7 @@
 from datetime import datetime
 import pandas as pd
 from loguru import logger
-from src.config import ENABLE_APPLE_HEALTH_DATA
+
 
 
 def log_new_activities_count(new_activity_ids: list) -> None:

@@ -133,13 +133,14 @@ CREATE_ALL_TABLES = {
         month TEXT,
         day_of_week TEXT
     )
-"""
+""",
 }
 
 
-INSERT_OR_IGNORE_QUERY = (
-    "INSERT OR IGNORE INTO {table_name} ({columns}) VALUES ({placeholders})"
-)
+INSERT_OR_REPLACE_QUERY = """
+INSERT OR REPLACE INTO {table_name} ({columns})
+VALUES ({placeholders})
+"""
 
 GET_CACHED_IDS = "SELECT id FROM cache;"
 GET_DATES_FROM_HEALTH = "SELECT date FROM health;"

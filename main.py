@@ -44,7 +44,6 @@ def main():
         # Retrieve all the cached ids
         cached_ids = db_manager.get_ids_from_cache()
 
-
         # Filter the dataframe for new activities and get a list of new activity IDs
         new_activities_df = activities_df[~activities_df["id"].isin(cached_ids)]
 
@@ -53,7 +52,6 @@ def main():
         # If there are new IDs
         if new_activity_ids:
             log_new_activities_count(new_activity_ids)
-
             process_new_activities(new_activity_ids, new_activities_df)
             process_gear_data(df=activities_df)
 
@@ -69,7 +67,9 @@ def main():
 
 def process_gear_data(df: pd.DataFrame) -> None:
     gear_ids = db_manager.get_gear_ids()
+
     gear_df = Gear.process_gears(strava_client, df)
+
     new_gear_df = gear_df[~gear_df["gear_id"].isin(gear_ids)]
 
     if not new_gear_df.empty:
@@ -122,10 +122,11 @@ def process_individual_activity(activity_id: int, detailed_activity):
         logger.error(f"Error in processing individual activity {activity_id}: {e}")
 
 
-
 if __name__ == "__main__":
     strava_client = StravaClient(**get_strava_api_config())
+
     db_manager = DatabaseManager()
+    # db_manager.delete_last_activity()  # Clear the last activity from the cache for debugging
     db_manager.create_all_tables()
 
     main()

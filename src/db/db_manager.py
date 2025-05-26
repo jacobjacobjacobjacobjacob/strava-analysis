@@ -7,7 +7,7 @@ from src.db.queries import (
     ALLOWED_TABLES,
     INSERT_ID_TO_CACHE,
     CREATE_ALL_TABLES,
-    INSERT_OR_IGNORE_QUERY,
+    INSERT_OR_REPLACE_QUERY,
     GET_CACHED_IDS,
     CLEAR_CACHE,
     GET_STREAMS_IDS,
@@ -19,9 +19,8 @@ from src.db.queries import (
     GET_ROW_COUNT,
     READ_TABLE_TO_DF,
     GET_DATES_FROM_HEALTH,
-    DELETE_LAST_ROW
+    DELETE_LAST_ROW,
 )
-
 
 
 class DatabaseManager:
@@ -33,7 +32,7 @@ class DatabaseManager:
     def connect_db(self):
         """Connect to the SQLite database."""
         conn = sqlite3.connect(self.db_path)
-        
+
         return conn
 
     def execute_query(self, query: str, params=None):
@@ -46,7 +45,6 @@ class DatabaseManager:
                 conn.commit()
                 logger.trace(f"Query executed:\n{query}\nParams:{params}")
                 return cursor.fetchall()
-            
 
         except sqlite3.Error as e:
             logger.error(f"Error executing query: {e}")
@@ -95,11 +93,11 @@ class DatabaseManager:
     def get_ids_from_activities(self) -> list:
         """Fetches all IDs from the activities table."""
         return [row[0] for row in self.execute_query(GET_ACTIVITIES_IDS)]
-    
+
     def get_dates_from_health(self) -> list:
         """Fetches all dates from the health table."""
         return [row[0] for row in self.execute_query(GET_DATES_FROM_HEALTH)]
-    
+
     def get_gear_ids(self) -> list:
         """Fetches all gear IDs from the gear table."""
         return [row[0] for row in self.execute_query(GET_GEAR_IDS)]
@@ -114,18 +112,6 @@ class DatabaseManager:
             logger.warning(missing_cache)
         else:
             return
-        
-    def check_health_database_discrepancies(self) -> None:
-        logger.warning("ADD DISCREPANCY CHECK HERE")
-        # activities_ids = self.get_ids_from_activities()
-        # cached_ids = self.get_ids_from_cache()
-        # missing_cache = [item for item in activities_ids if item not in cached_ids]
-
-        # if len(missing_cache) != 0:
-        #     logger.warning(f"{len(missing_cache)} activities are not present in cache.")
-
-        # else:
-        #     return
 
     def get_row_count(self, table_name: str) -> int:
         """Fetches the count of rows in the specified table"""
@@ -149,7 +135,7 @@ class DatabaseManager:
         self,
         df: pd.DataFrame,
         table_name: str,
-        query=INSERT_OR_IGNORE_QUERY,
+        query=INSERT_OR_REPLACE_QUERY,
     ) -> None:
         """
         Inserts data from a Pandas DataFrame into a specified SQLite database table using predefined queries.
@@ -178,7 +164,7 @@ class DatabaseManager:
         )
 
         # logger.debug(f"Executing Query: {query}\n\nColumns: {columns}\n\nPlaceholders: {placeholders}\n\nTable: {table_name}")
-    
+
         # Convert to list of tuples (records)
         data = df.to_dict(orient="records")
 
@@ -213,9 +199,9 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error fetching table '{table_name}' as DataFrame: {e}")
             return pd.DataFrame()
-        
+
     def drop_table(self, table_name: str) -> None:
-        """ Drops a table from the database """
+        """Drops a table from the database"""
         logger.warning(f"Are you sure you want to drop the table '{table_name}'? (Y/N)")
         response = input()
         if response.upper() == "Y":
@@ -226,11 +212,9 @@ class DatabaseManager:
                 logger.error(f"Error dropping table '{table_name}': {e}")
         else:
             logger.warning(f"Table '{table_name}' not dropped.")
-    
-
 
     def delete_last_activity(self, table_names: list = ["cache", "activities"]) -> None:
-        """ Deletes the last row from the specified tables based on the `id` column. """
+        """Deletes the last row from the specified tables based on the `id` column."""
         for table_name in table_names:
             # Validate table name
             self.validate_table(table_name)
@@ -245,7 +229,7 @@ class DatabaseManager:
                 # Execute the query
                 query = DELETE_LAST_ROW.format(table_name=table_name)
                 self.execute_query(query)
-                
+                logger.warning(f"Last row deleted from table '{table_name}'.")
 
             except Exception as e:
                 logger.error(f"Error deleting last row from table '{table_name}': {e}")
