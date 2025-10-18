@@ -1,4 +1,5 @@
 # src/db/db_manager.py
+import os
 import sqlite3
 import pandas as pd
 from loguru import logger
@@ -233,3 +234,29 @@ class DatabaseManager:
 
             except Exception as e:
                 logger.error(f"Error deleting last row from table '{table_name}': {e}")
+
+    def export_table_to_csv(self, table_name: str, file_path: str = "database/exports") -> None:
+        """Exports a table from the database to a CSV file."""
+        try:
+            # Validate table name
+            self.validate_table(table_name)
+
+            if file_path is None:
+                # Default: database/exports/table_name.csv
+                file_path = f"database/exports/{table_name}.csv"
+            elif file_path.endswith('/') or (os.path.exists(file_path) and os.path.isdir(file_path)):
+                # If file_path is a directory, append table_name.csv
+                file_path = os.path.join(file_path, f"{table_name}.csv")
+            elif not file_path.endswith('.csv'):
+                # If no .csv extension, add it
+                file_path += '.csv'
+
+            # Fetch the table as a DataFrame
+            df = self.get_table_as_dataframe(table_name)
+
+            # Export to CSV
+            df.to_csv(file_path, index=False)
+            logger.info(f"Table '{table_name}' exported to '{file_path}' successfully.")
+
+        except Exception as e:
+            logger.error(f"Error exporting table '{table_name}' to CSV: {e}")
