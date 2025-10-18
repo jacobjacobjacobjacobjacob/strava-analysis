@@ -56,7 +56,7 @@ def main():
             process_gear_data(df=activities_df)
 
         else:
-            logger.info("No new activities.\n")
+            logger.warning("No new activities.\n")
 
     except Exception as e:
         logger.error(f"Error during main processing: {e}")
@@ -85,6 +85,7 @@ def process_new_activities(new_activity_ids, new_activities_df):
 
         try:
             detailed_activity = strava_client.get_detailed_activity(activity_id)
+            # print(detailed_activity)
             logger.debug(f"Processing activity id: {activity_id}")
 
             if not detailed_activity:
@@ -128,5 +129,7 @@ if __name__ == "__main__":
     db_manager = DatabaseManager()
     # db_manager.delete_last_activity()  # Clear the last activity from the cache for debugging
     db_manager.create_all_tables()
-
+    
     main()
+
+    db_manager.export_table_to_csv(table_name="activities")  
