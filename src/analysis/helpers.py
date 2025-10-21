@@ -82,3 +82,11 @@ def get_monthly_cumsum(df: pd.DataFrame, metric: str) -> pd.DataFrame:
         raise ValueError(f"Invalid metric: {metric}")
     
     return monthly_df
+
+def format_kph_to_pace(kph):
+        """Convert speed (kph) to pace (time per km)."""
+        if kph == 0:
+            return "N/A"
+        pace_minutes = 60 / kph
+        pace_seconds = (pace_minutes - int(pace_minutes)) * 60
+        return f"{int(pace_minutes)}:{int(pace_seconds):02d} min/km"
