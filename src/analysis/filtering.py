@@ -9,7 +9,6 @@ from src.analysis.constants import ALL_MONTHS
 
 class FilteringError(Exception):
     """Custom exception for filtering operations"""
-
     pass
 
 
