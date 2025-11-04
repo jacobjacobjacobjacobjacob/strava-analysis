@@ -194,7 +194,6 @@ class DatabaseManager:
             with self.connect_db() as conn:
                 df = pd.read_sql_query(query, conn)
 
-            logger.info(f"Table '{table_name}' fetched as DataFrame.")
             return df
 
         except Exception as e:
@@ -256,7 +255,7 @@ class DatabaseManager:
 
             # Export to CSV
             df.to_csv(file_path, index=False)
-            logger.info(f"Table '{table_name}' exported to '{file_path}' successfully.")
+            logger.info(f"Table '{table_name}' exported to '{file_path}'.")
 
         except Exception as e:
             logger.error(f"Error exporting table '{table_name}' to CSV: {e}")
